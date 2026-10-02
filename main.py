@@ -4,11 +4,11 @@ import engine.match_engine as match_engine
 attacker = Player(100, 0, "Crusher", 5)
 defender = Player(100, 0, "Smasher", 4)
 
-winner, loser, damage, winner_gained_xp = match_engine.process_duel(attacker, defender)
+dresult = match_engine.process_duel(attacker, defender)
 print(attacker.name, "attacks", defender.name)
-print("Winner", winner.name)
-print("Loser", loser.name)
-print(loser.name, "lost HP:", damage, "-> Now has", loser.hp)
-print(winner.name, "gains XP:", winner_gained_xp, "-> Now has", winner.xp)
-if loser.hp == 0:
-    print(loser.name, "is KO!")
+print("Winner", dresult.winner.name)
+print("Loser", dresult.loser.name)
+print(dresult.loser.name, "lost HP:", dresult.lost_hp, "-> Now has", dresult.loser.hp)
+print(dresult.winner.name, "gains XP:", dresult.gained_xp, "-> Now has", dresult.winner.xp)
+if dresult.ko == True:
+    print(dresult.loser.name, "is KO!")
