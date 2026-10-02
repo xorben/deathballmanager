@@ -2,6 +2,7 @@ import engine.duel as duel
 from domain.player import Player
 import config.rules as rules
 from engine.duel_result import DuelResult
+from domain.team import Team
 def process_duel(attacker: Player, defender: Player) -> DuelResult:
     winner_gained_xp = 0
     ko = False
@@ -23,3 +24,8 @@ def process_duel(attacker: Player, defender: Player) -> DuelResult:
         ko
     )
     return dresult
+
+
+def decide_active_player(team: Team) -> list[Player]:
+    active_players = [p for p in team.players if p.hp > 0]
+    return active_players
