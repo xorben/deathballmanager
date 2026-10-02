@@ -42,11 +42,11 @@ team_b.formation["attack"].append(team_b.players[4])
 attacker = team_a.players[1]
 defender = match_engine.select_random_player_in_zone(team_b, "defense")
 
-dresult = match_engine.process_duel(attacker, defender)
+d_result = match_engine.process_duel(attacker, defender)
 print(attacker.name, "attacks", defender.name)
-print("Winner", dresult.winner.name)
-print("Loser", dresult.loser.name)
-print(dresult.loser.name, "lost HP:", dresult.lost_hp, "-> Now has", dresult.loser.hp)
-print(dresult.winner.name, "gains XP:", dresult.gained_xp, "-> Now has", dresult.winner.xp)
-if dresult.ko == True:
-    print(dresult.loser.name, "is KO!")
+print("Winner", d_result.winner.name)
+print("Loser", d_result.loser.name)
+print(d_result.loser.name, "lost HP:", d_result.lost_hp, "-> Now has", d_result.loser.hp)
+print(d_result.winner.name, "gains XP:", d_result.gained_xp, "-> Now has", d_result.winner.xp)
+if d_result.ko == True:
+    print(d_result.loser.name, "is KO!")

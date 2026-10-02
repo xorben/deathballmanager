@@ -17,7 +17,7 @@ def process_duel(attacker: Player, defender: Player) -> DuelResult:
         ko = True
         winner_gained_xp += rules.xp["ko"]
     winner.xp += winner_gained_xp
-    dresult = DuelResult(
+    d_result = DuelResult(
         winner,
         loser,
         damage,
@@ -25,7 +25,7 @@ def process_duel(attacker: Player, defender: Player) -> DuelResult:
         loser_lost_hp,
         ko
     )
-    return dresult
+    return d_result
 
 
 def get_all_active_player(team: Team) -> list[Player]:
@@ -44,3 +44,12 @@ def select_random_player_in_zone(team: Team, zone: str) -> Player|None:
     if len(players_in_zone) > 0:
         selected_player = choice(players_in_zone)
     return selected_player
+
+
+def process_zone_attack(attacker: Player, defending_team:Team, zone:str) -> DuelResult | None:
+    defender = select_random_player_in_zone(defending_team, zone)
+    if defender is not None:
+        return process_duel(attacker, defender)
+    else:
+        # go to next zone
+        return None
