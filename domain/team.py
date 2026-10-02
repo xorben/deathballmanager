@@ -3,3 +3,8 @@ class Team:
         self.name = name
         self.players = players
         self.score = score
+        self.formation = {
+            "defense": [],
+            "midfield": [],
+            "attack": []
+        }

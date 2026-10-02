@@ -12,6 +12,12 @@ team_a = Team(
         Player(100, 0, "Tearmaker", 5)
     ]
 )
+team_a.formation["defense"].append(team_a.players[1])
+team_a.formation["defense"].append(team_a.players[2])
+team_a.formation["midfield"].append(team_a.players[0])
+team_a.formation["attack"].append(team_a.players[3])
+team_a.formation["attack"].append(team_a.players[4])
+
 
 team_b = Team(
     "Lunar Ionstorm",
@@ -23,17 +29,18 @@ team_b = Team(
         Player(100, 0, "Ironsight", 2)
     ]
 )
-
-active_players_a = match_engine.decide_active_player(team_a)
-active_players_b = match_engine.decide_active_player(team_b)
-for player in active_players_a:
-    print("Team A", player.name, player.hp)
-for player in active_players_b:
-    print("Team B", player.name, player.hp)
+team_b.formation["defense"].append(team_b.players[1])
+team_b.formation["defense"].append(team_b.players[2])
+team_b.formation["midfield"].append(team_b.players[0])
+team_b.formation["attack"].append(team_b.players[3])
+team_b.formation["attack"].append(team_b.players[4])
 
 
-attacker = choice(active_players_a)
-defender = choice(active_players_b)
+
+
+
+attacker = team_a.players[1]
+defender = match_engine.select_random_player_in_zone(team_b, "defense")
 
 dresult = match_engine.process_duel(attacker, defender)
 print(attacker.name, "attacks", defender.name)

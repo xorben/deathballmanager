@@ -1,3 +1,5 @@
+from random import choice
+
 import engine.duel as duel
 from domain.player import Player
 import config.rules as rules
@@ -26,6 +28,19 @@ def process_duel(attacker: Player, defender: Player) -> DuelResult:
     return dresult
 
 
-def decide_active_player(team: Team) -> list[Player]:
+def get_all_active_player(team: Team) -> list[Player]:
     active_players = [p for p in team.players if p.hp > 0]
     return active_players
+
+
+def get_active_player_in_zone(team: Team, zone: str) -> list[Player]:
+    active_players = [p for p in team.formation[zone] if p.hp > 0]
+    return active_players
+
+
+def select_random_player_in_zone(team: Team, zone: str) -> Player|None:
+    players_in_zone = get_active_player_in_zone(team, zone)
+    selected_player = None
+    if len(players_in_zone) > 0:
+        selected_player = choice(players_in_zone)
+    return selected_player
