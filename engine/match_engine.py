@@ -53,3 +53,19 @@ def process_zone_attack(attacker: Player, defending_team:Team, zone:str) -> Duel
     else:
         # go to next zone
         return None
+
+
+def process_attack(attacker: Player, defending_team:Team) -> DuelResult | None:
+    # Attacker is in midfield and fights against midfield
+    print("Attacking Midfield")
+    result = process_zone_attack(attacker, defending_team, "midfield")
+    if result is not None and result.winner != attacker:
+        print("Attack stopped in Midfield")
+        return result
+
+    # Attacker is in attack zone and fights against enemy defense
+    print("Attacking Attack")
+    result = process_zone_attack(attacker, defending_team, "defense")
+    if result is not None and result.winner != attacker:
+        print("Attack stopped in Attack")
+        return result

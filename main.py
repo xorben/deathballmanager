@@ -2,6 +2,9 @@ from domain.player import Player
 import engine.match_engine as match_engine
 from domain.team import Team
 from random import choice
+
+from engine.match_engine import process_attack
+
 team_a = Team(
     "Solar Smashers",
     [
@@ -42,11 +45,6 @@ team_b.formation["attack"].append(team_b.players[4])
 attacker = team_a.players[1]
 defender = match_engine.select_random_player_in_zone(team_b, "defense")
 
-d_result = match_engine.process_duel(attacker, defender)
-print(attacker.name, "attacks", defender.name)
-print("Winner", d_result.winner.name)
-print("Loser", d_result.loser.name)
-print(d_result.loser.name, "lost HP:", d_result.lost_hp, "-> Now has", d_result.loser.hp)
-print(d_result.winner.name, "gains XP:", d_result.gained_xp, "-> Now has", d_result.winner.xp)
-if d_result.ko == True:
-    print(d_result.loser.name, "is KO!")
+process_attack(attacker, team_b)
+
+exit()
