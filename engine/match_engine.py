@@ -5,6 +5,7 @@ from domain.player import Player
 import config.rules as rules
 from engine.duel_result import DuelResult
 from domain.team import Team
+from engine.attack_result import AttackResult
 def process_duel(attacker: Player, defender: Player) -> DuelResult:
     winner_gained_xp = 0
     ko = False
@@ -68,33 +69,62 @@ def goal_attempt(attacking_player: Player) -> bool:
         return False
 
 
-def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) -> DuelResult | None:
+def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) -> AttackResult:
     """
     Handels the play through the field and switching through the zones.
+    :param attacking_team:
     :param attacker:
     :param defending_team:
     :return:
     """
-    # Attacker is in midfield and fights against midfield
-    print("Attacking Midfield")
-    result = process_zone_attack(attacker, defending_team, "midfield")
-    if result is not None and result.winner != attacker:
-        print("Attack stopped in Midfield")
-        return result
+    stopped = False
+    points_scored = 0
+    gained_xp = 0
+    last_field = ""
+    goal = False
 
-    # Attacker is in attack zone and fights against enemy defense
-    print("Attacking Attack")
-    result = process_zone_attack(attacker, defending_team, "defense")
-    if result is not None and result.winner != attacker:
-        print("Attack stopped in Attack")
-        return result
+    if not stopped:
+        # Attacker is in midfield and fights against midfield
+        print("Attacking Midfield")
+        d_result = process_zone_attack(attacker, defending_team, "midfield")
+        last_field = "midfield"
+        if d_result is not None and d_result.winner == attacker:
+            gained_xp += d_result.gained_xp
+        if d_result is not None and d_result.winner != attacker:
+            print("Attack stopped in Midfield")
+            stopped = True
 
-    print("Goal attempt")
-    goal = goal_attempt(attacker)
-    if goal:
-        print("GOAL!!!")
-        attacker.xp += rules.xp["goal"]
-        attacking_team.score += 1
-        print("One point for", attacking_team.name)
-    else:
-        print("Missed goal...")
+    if not stopped:
+        # Attacker is in attack zone and fights against enemy defense
+        print("Attacking Attack")
+        d_result = process_zone_attack(attacker, defending_team, "defense")
+        last_field = "attack"
+        if d_result is not None and d_result.winner == attacker:
+            gained_xp += d_result.gained_xp
+        if d_result is not None and d_result.winner != attacker:
+            print("Attack stopped in Attack")
+            stopped = True
+
+    if not stopped:
+        print("Goal attempt")
+        last_field = "goal"
+        goal = goal_attempt(attacker)
+        if goal:
+            print("GOAL!!!")
+            attacker.xp += rules.xp["goal"]
+            attacking_team.score += 1
+            points_scored = 1
+            gained_xp += rules.xp["goal"]
+            print("One point for", attacking_team.name)
+        else:
+            print("Missed goal...")
+
+    a_result = AttackResult(
+        attacker,
+        stopped,
+        goal,
+        points_scored,
+        gained_xp,
+        last_field
+    )
+    return a_result
