@@ -45,6 +45,6 @@ team_b.formation["attack"].append(team_b.players[4])
 attacker = team_a.players[1]
 defender = match_engine.select_random_player_in_zone(team_b, "defense")
 
-process_attack(attacker, team_b)
+process_attack(attacker, team_b, team_a)
 
 exit()

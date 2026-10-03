@@ -1,5 +1,5 @@
 from random import choice
-
+import engine.dice as dice
 import engine.duel as duel
 from domain.player import Player
 import config.rules as rules
@@ -55,7 +55,26 @@ def process_zone_attack(attacker: Player, defending_team:Team, zone:str) -> Duel
         return None
 
 
-def process_attack(attacker: Player, defending_team:Team) -> DuelResult | None:
+def goal_attempt(attacking_player: Player) -> bool:
+    """
+    Handels the goal attempt
+    :param attacking_player:
+    :return:
+    """
+    roll = dice.roll_1d10()
+    if roll + attacking_player.strength >= 10:
+        return True
+    else:
+        return False
+
+
+def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) -> DuelResult | None:
+    """
+    Handels the play through the field and switching through the zones.
+    :param attacker:
+    :param defending_team:
+    :return:
+    """
     # Attacker is in midfield and fights against midfield
     print("Attacking Midfield")
     result = process_zone_attack(attacker, defending_team, "midfield")
@@ -69,3 +88,13 @@ def process_attack(attacker: Player, defending_team:Team) -> DuelResult | None:
     if result is not None and result.winner != attacker:
         print("Attack stopped in Attack")
         return result
+
+    print("Goal attempt")
+    goal = goal_attempt(attacker)
+    if goal:
+        print("GOAL!!!")
+        attacker.xp += rules.xp["goal"]
+        attacking_team.score += 1
+        print("One point for", attacking_team.name)
+    else:
+        print("Missed goal...")
