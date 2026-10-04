@@ -6,6 +6,8 @@ import config.rules as rules
 from engine.duel_result import DuelResult
 from domain.team import Team
 from engine.attack_result import AttackResult
+from engine.midfield_result import MidfieldResult
+
 def process_duel(attacker: Player, defender: Player) -> DuelResult:
     winner_gained_xp = 0
     ko = False
@@ -128,3 +130,36 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
         last_field
     )
     return a_result
+
+
+def select_midfield_player(team: Team) -> Player|None:
+    player = select_random_player_in_zone(team, "midfield")
+    if player is None:
+        player = select_random_player_in_zone(team, "defense")
+    if player is None:
+        player = select_random_player_in_zone(team, "attack")
+    return player
+
+
+def process_midfield(team_a: Team, team_b: Team) -> MidfieldResult:
+    active_player_a = select_midfield_player(team_a)
+    active_player_b = select_midfield_player(team_b)
+    d_result = None
+    ball_carrier = None
+    winning_team = None
+    if active_player_a is not None and active_player_b is not None:
+        d_result = process_duel(active_player_a, active_player_b)
+        if d_result.winner == active_player_a:
+            winning_team = team_a
+            ball_carrier = active_player_a
+        else:
+            winning_team = team_b
+            ball_carrier = active_player_b
+    elif active_player_a is not None and active_player_b is None:
+        winning_team = team_a
+        ball_carrier = active_player_a
+    elif active_player_b is not None and active_player_a is None:
+        winning_team = team_b
+        ball_carrier = active_player_b
+    mf_result = MidfieldResult(winning_team, ball_carrier, d_result)
+    return mf_result
