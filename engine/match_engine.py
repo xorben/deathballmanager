@@ -7,6 +7,7 @@ from engine.duel_result import DuelResult
 from domain.team import Team
 from engine.attack_result import AttackResult
 from engine.midfield_result import MidfieldResult
+from domain.zones import Zone
 
 def process_duel(attacker: Player, defender: Player) -> DuelResult:
     winner_gained_xp = 0
@@ -36,12 +37,12 @@ def get_all_active_player(team: Team) -> list[Player]:
     return active_players
 
 
-def get_active_player_in_zone(team: Team, zone: str) -> list[Player]:
+def get_active_player_in_zone(team: Team, zone: Zone) -> list[Player]:
     active_players = [p for p in team.formation[zone] if p.hp > 0]
     return active_players
 
 
-def select_random_player_in_zone(team: Team, zone: str) -> Player|None:
+def select_random_player_in_zone(team: Team, zone: Zone) -> Player|None:
     players_in_zone = get_active_player_in_zone(team, zone)
     selected_player = None
     if len(players_in_zone) > 0:
@@ -49,7 +50,7 @@ def select_random_player_in_zone(team: Team, zone: str) -> Player|None:
     return selected_player
 
 
-def process_zone_attack(attacker: Player, defending_team:Team, zone:str) -> DuelResult | None:
+def process_zone_attack(attacker: Player, defending_team:Team, zone: Zone) -> DuelResult | None:
     defender = select_random_player_in_zone(defending_team, zone)
     if defender is not None:
         return process_duel(attacker, defender)
@@ -88,8 +89,8 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
     if not stopped:
         # Attacker is in midfield and fights against midfield
         print("Attacking Midfield")
-        d_result = process_zone_attack(attacker, defending_team, "midfield")
-        last_field = "midfield"
+        d_result = process_zone_attack(attacker, defending_team, Zone.MIDFIELD)
+        last_field = Zone.MIDFIELD
         if d_result is not None and d_result.winner == attacker:
             gained_xp += d_result.gained_xp
         if d_result is not None and d_result.winner != attacker:
@@ -99,8 +100,8 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
     if not stopped:
         # Attacker is in attack zone and fights against enemy defense
         print("Attacking Attack")
-        d_result = process_zone_attack(attacker, defending_team, "defense")
-        last_field = "attack"
+        d_result = process_zone_attack(attacker, defending_team, Zone.DEFENSE)
+        last_field = Zone.ATTACK
         if d_result is not None and d_result.winner == attacker:
             gained_xp += d_result.gained_xp
         if d_result is not None and d_result.winner != attacker:
@@ -109,7 +110,7 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
 
     if not stopped:
         print("Goal attempt")
-        last_field = "goal"
+        last_field = Zone.GOAL
         goal = goal_attempt(attacker)
         if goal:
             print("GOAL!!!")
@@ -133,11 +134,11 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
 
 
 def select_midfield_player(team: Team) -> Player|None:
-    player = select_random_player_in_zone(team, "midfield")
+    player = select_random_player_in_zone(team, Zone.MIDFIELD)
     if player is None:
-        player = select_random_player_in_zone(team, "defense")
+        player = select_random_player_in_zone(team, Zone.DEFENSE)
     if player is None:
-        player = select_random_player_in_zone(team, "attack")
+        player = select_random_player_in_zone(team, Zone.ATTACK)
     return player
 
 
@@ -163,3 +164,7 @@ def process_midfield(team_a: Team, team_b: Team) -> MidfieldResult:
         ball_carrier = active_player_b
     mf_result = MidfieldResult(winning_team, ball_carrier, d_result)
     return mf_result
+
+
+def player_decide_action(player: Player):
+    pass

@@ -1,4 +1,5 @@
 from domain.player import Player
+from domain.zones import Zone
 class AttackResult:
     def __init__(self,
                  attacker: Player,
@@ -6,7 +7,7 @@ class AttackResult:
                  goal:bool,
                  points_scored: int,
                  gained_xp: int,
-                 last_field: str
+                 last_field: Zone
                  ) -> None:
         self.attacker = attacker
         self.stopped = stopped
