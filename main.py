@@ -40,10 +40,8 @@ team_b.formation[Zone.ATTACK].append(team_b.players[4])
 
 
 
-p = match_engine.select_midfield_player(
-    team_b
-)
-print(p)
+a = match_engine.player_decide_action(team_b.players[4])
+print(a)
 exit()
 attacker = team_a.players[1]
 defender = match_engine.select_random_player_in_zone(team_b, "defense")

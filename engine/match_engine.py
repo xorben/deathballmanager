@@ -8,6 +8,7 @@ from domain.team import Team
 from engine.attack_result import AttackResult
 from engine.midfield_result import MidfieldResult
 from domain.zones import Zone
+from domain.player_action import PlayerAction
 
 def process_duel(attacker: Player, defender: Player) -> DuelResult:
     winner_gained_xp = 0
@@ -167,4 +168,30 @@ def process_midfield(team_a: Team, team_b: Team) -> MidfieldResult:
 
 
 def player_decide_action(player: Player):
-    pass
+    """
+    Decide whether to pass or to charge
+    :param player:
+    :return:
+    """
+    roll = dice.roll_1d10()
+    print(roll)
+    player_action = None
+    if 0 < player.hp < 30:
+        # Player is to weak. Check if he has enough vitality
+        if player.strength + roll >= 10:
+            player_action = PlayerAction.CHARGE
+        else:
+            player_action = PlayerAction.PASS
+    elif 30 <= player.hp < 80:
+        # Player seems to be ok.
+        if player.strength + roll + 2 >= 10:
+            player_action = PlayerAction.CHARGE
+        else:
+            player_action = PlayerAction.PASS
+    elif 80 <= player.hp <= 100:
+        # Player is fine, should be less cautious
+        if player.strength + roll + 4 >= 10:
+            player_action = PlayerAction.CHARGE
+        else:
+            player_action = PlayerAction.PASS
+    return player_action
