@@ -15,3 +15,4 @@ class AttackResult:
         self.points_scored = points_scored
         self.gained_xp = gained_xp
         self.last_field = last_field
+

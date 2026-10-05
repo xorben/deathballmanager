@@ -1,4 +1,6 @@
 from random import choice
+from typing import Literal
+
 import engine.dice as dice
 import engine.duel as duel
 from domain.player import Player
@@ -52,6 +54,13 @@ def select_random_player_in_zone(team: Team, zone: Zone) -> Player|None:
 
 
 def process_zone_attack(attacker: Player, defending_team:Team, zone: Zone) -> DuelResult | None:
+    """
+    Determines the winner within a zone
+    :param attacker:
+    :param defending_team:
+    :param zone:
+    :return:
+    """
     defender = select_random_player_in_zone(defending_team, zone)
     if defender is not None:
         return process_duel(attacker, defender)
@@ -84,7 +93,7 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
     stopped = False
     points_scored = 0
     gained_xp = 0
-    last_field = ""
+    last_field = Zone.MIDFIELD
     goal = False
 
     if not stopped:
@@ -149,25 +158,30 @@ def process_midfield(team_a: Team, team_b: Team) -> MidfieldResult:
     d_result = None
     ball_carrier = None
     winning_team = None
+    defeated_player = None
     if active_player_a is not None and active_player_b is not None:
         d_result = process_duel(active_player_a, active_player_b)
         if d_result.winner == active_player_a:
             winning_team = team_a
             ball_carrier = active_player_a
+            defeated_player = active_player_b
         else:
             winning_team = team_b
             ball_carrier = active_player_b
+            defeated_player = active_player_a
     elif active_player_a is not None and active_player_b is None:
         winning_team = team_a
         ball_carrier = active_player_a
+        defeated_player = active_player_b
     elif active_player_b is not None and active_player_a is None:
         winning_team = team_b
         ball_carrier = active_player_b
-    mf_result = MidfieldResult(winning_team, ball_carrier, d_result)
+        defeated_player = active_player_a
+    mf_result = MidfieldResult(winning_team, ball_carrier, d_result, defeated_player)
     return mf_result
 
 
-def player_decide_action(player: Player):
+def player_decide_action(player: Player) -> Literal[PlayerAction.CHARGE, PlayerAction.PASS] | None:
     """
     Decide whether to pass or to charge
     :param player:
