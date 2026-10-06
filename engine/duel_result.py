@@ -5,11 +5,14 @@ class DuelResult:
                  damage: int,
                  gained_xp: int,
                  lost_hp: int,
-                 ko: bool):
+                 ko: bool,
+                 defender: Player
+    ):
         self.winner = winner
         self.loser = loser
         self.damage = damage
         self.gained_xp = gained_xp
         self.lost_hp = lost_hp
         self.ko = ko
+        self.defender = defender
 

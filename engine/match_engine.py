@@ -1,6 +1,6 @@
 from random import choice
 from typing import Literal
-
+from time import sleep
 import engine.dice as dice
 import engine.duel as duel
 from domain.player import Player
@@ -30,7 +30,8 @@ def process_duel(attacker: Player, defender: Player) -> DuelResult:
         damage,
         winner_gained_xp,
         loser_lost_hp,
-        ko
+        ko,
+        defender
     )
     return d_result
 
@@ -63,7 +64,8 @@ def process_zone_attack(attacker: Player, defending_team:Team, zone: Zone) -> Du
     """
     defender = select_random_player_in_zone(defending_team, zone)
     if defender is not None:
-        return process_duel(attacker, defender)
+        d_result = process_duel(attacker, defender)
+        return d_result
     else:
         # go to next zone
         return None
@@ -93,29 +95,23 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
     stopped = False
     points_scored = 0
     gained_xp = 0
-    last_field = Zone.MIDFIELD
+    last_field = Zone.ATTACK
     goal = False
 
     if not stopped:
-        # Attacker is in midfield and fights against midfield
-        print("Attacking Midfield")
-        d_result = process_zone_attack(attacker, defending_team, Zone.MIDFIELD)
-        last_field = Zone.MIDFIELD
-        if d_result is not None and d_result.winner == attacker:
-            gained_xp += d_result.gained_xp
-        if d_result is not None and d_result.winner != attacker:
-            print("Attack stopped in Midfield")
-            stopped = True
-
-    if not stopped:
         # Attacker is in attack zone and fights against enemy defense
-        print("Attacking Attack")
+        print(attacker.name, "attacking attack zone!")
+        sleep(1)
         d_result = process_zone_attack(attacker, defending_team, Zone.DEFENSE)
+        if d_result is not None:
+            print(attacker.name, "fights against", d_result.defender.name)
+        else:
+            print("Enemy defense is empty.", attacker.name, "is running towards the goal!")
+        sleep(1)
         last_field = Zone.ATTACK
         if d_result is not None and d_result.winner == attacker:
             gained_xp += d_result.gained_xp
         if d_result is not None and d_result.winner != attacker:
-            print("Attack stopped in Attack")
             stopped = True
 
     if not stopped:
