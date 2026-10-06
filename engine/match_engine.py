@@ -92,6 +92,7 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
     :param defending_team:
     :return:
     """
+    defender = None
     stopped = False
     points_scored = 0
     gained_xp = 0
@@ -104,7 +105,8 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
         sleep(1)
         d_result = process_zone_attack(attacker, defending_team, Zone.DEFENSE)
         if d_result is not None:
-            print(attacker.name, "fights against", d_result.defender.name)
+            defender = d_result.defender
+            print(attacker.name, "fights against", defender.name)
         else:
             print("Enemy defense is empty.", attacker.name, "is running towards the goal!")
         sleep(1)
@@ -134,7 +136,8 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
         goal,
         points_scored,
         gained_xp,
-        last_field
+        last_field,
+        defender
     )
     return a_result
 

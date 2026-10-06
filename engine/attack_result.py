@@ -7,7 +7,8 @@ class AttackResult:
                  goal:bool,
                  points_scored: int,
                  gained_xp: int,
-                 last_field: Zone
+                 last_field: Zone,
+                 defender: Player | None
                  ) -> None:
         self.attacker = attacker
         self.stopped = stopped
@@ -15,4 +16,4 @@ class AttackResult:
         self.points_scored = points_scored
         self.gained_xp = gained_xp
         self.last_field = last_field
-
+        self.defender = defender
