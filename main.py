@@ -4,7 +4,6 @@ from domain.team import Team
 from domain.zones import Zone
 from domain.player_action import PlayerAction
 from time import sleep
-from engine.match_engine import process_attack
 
 team_a = Team(
     "Solar Smashers",
@@ -64,7 +63,3 @@ print(a_result.stopped)
 
 
 exit()
-attacker = team_a.players[1]
-defender = match_engine.select_random_player_in_zone(team_b, "defense")
-
-process_attack(attacker, team_b, team_a)

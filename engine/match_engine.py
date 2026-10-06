@@ -114,6 +114,7 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
         if d_result is not None and d_result.winner == attacker:
             gained_xp += d_result.gained_xp
         if d_result is not None and d_result.winner != attacker:
+            print(attacker.name, "got stopped by", defender.name)
             stopped = True
 
     if not stopped:
