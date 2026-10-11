@@ -42,38 +42,6 @@ team_b.formation[Zone.MIDFIELD].append(team_b.players[0])
 team_b.formation[Zone.ATTACK].append(team_b.players[3])
 team_b.formation[Zone.ATTACK].append(team_b.players[4])
 
+match_engine.process_match(team_a, team_b)
 
-c = 0
-attack_possibility = 8
-for minute in range(1, 61):
-    d_result = roll_1d10()
-    if d_result >= attack_possibility:
-        c += 1
-        print("Minute", minute, f"(Action #{c})")
-        match_engine.process_play(team_a,team_b)
-    if minute == 30:
-        print("HALFTIME!")
-        sleep(2)
-print("FULLTIME")
-print("Score:", team_a.name, team_a.score)
-print("Score:", team_b.name, team_b.score)
-winner_team = None
-loser_team = None
-if team_a.score > team_b.score:
-    winner_team = team_a
-    loser_team = team_b
-elif team_b.score > team_a.score:
-    winner_team = team_b
-    loser_team = team_a
-elif team_a.score == team_b.score:
-    winner_team = None
-    loser_team = None
-
-if winner_team:
-    print("Winner is", winner_team.name)
-    for player in winner_team.players:
-        player.xp += config.rules.Xp.MATCH_WIN
-        print(player.name, player.xp, player.hp)
-else:
-    print("Draw Game!")
 exit()
