@@ -1,6 +1,7 @@
-xp = {
-    "duel_win": 2,
-    "goal": 3,
-    "match_win": 5,
-    "ko": 6
-}
+from enum import IntEnum
+
+class Xp(IntEnum):
+    DUEL_WIN = 2,
+    GOAL = 3,
+    MATCH_WIN = 5,
+    KO = 6

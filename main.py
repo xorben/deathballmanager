@@ -44,7 +44,7 @@ team_b.formation[Zone.ATTACK].append(team_b.players[4])
 
 
 c = 0
-attack_possibility = 9
+attack_possibility = 8
 for minute in range(1, 61):
     d_result = roll_1d10()
     if d_result >= attack_possibility:
@@ -72,7 +72,7 @@ elif team_a.score == team_b.score:
 if winner_team:
     print("Winner is", winner_team.name)
     for player in winner_team.players:
-        player.xp += config.rules.xp["match_win"]
+        player.xp += config.rules.Xp.MATCH_WIN
         print(player.name, player.xp, player.hp)
 else:
     print("Draw Game!")

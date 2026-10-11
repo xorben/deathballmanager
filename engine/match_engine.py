@@ -19,10 +19,10 @@ def process_duel(attacker: Player, defender: Player) -> DuelResult:
     loser_lost_hp = min(damage, loser.hp)
     loser.hp = max(loser.hp - damage, 0)
 
-    winner_gained_xp += rules.xp["duel_win"]
+    winner_gained_xp += rules.Xp.DUEL_WIN
     if loser.hp == 0:
         ko = True
-        winner_gained_xp += rules.xp["ko"]
+        winner_gained_xp += rules.Xp.KO
     winner.xp += winner_gained_xp
     d_result = DuelResult(
         winner,
@@ -123,10 +123,10 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
         goal = goal_attempt(attacker)
         if goal:
             print("GOAL!!!")
-            attacker.xp += rules.xp["goal"]
+            attacker.xp += rules.Xp.GOAL
             attacking_team.score += 1
             points_scored = 1
-            gained_xp += rules.xp["goal"]
+            gained_xp += rules.Xp.GOAL
             print("One point for", attacking_team.name)
         else:
             print("Missed goal...")
