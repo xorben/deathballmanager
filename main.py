@@ -1,9 +1,13 @@
+import config.rules
+import engine
 from domain.player import Player
 import engine.match_engine as match_engine
 from domain.team import Team
 from domain.zones import Zone
 from domain.player_action import PlayerAction
 from time import sleep
+from engine.dice import roll_1d10
+
 
 team_a = Team(
     "Solar Smashers",
@@ -39,11 +43,37 @@ team_b.formation[Zone.ATTACK].append(team_b.players[3])
 team_b.formation[Zone.ATTACK].append(team_b.players[4])
 
 
-mf_result, player_action, a_result = match_engine.process_play(
-    team_a,
-    team_b
-)
+c = 0
+attack_possibility = 9
+for minute in range(1, 61):
+    d_result = roll_1d10()
+    if d_result >= attack_possibility:
+        c += 1
+        print("Minute", minute, f"(Action #{c})")
+        match_engine.process_play(team_a,team_b)
+    if minute == 30:
+        print("HALFTIME!")
+        sleep(2)
+print("FULLTIME")
+print("Score:", team_a.name, team_a.score)
+print("Score:", team_b.name, team_b.score)
+winner_team = None
+loser_team = None
+if team_a.score > team_b.score:
+    winner_team = team_a
+    loser_team = team_b
+elif team_b.score > team_a.score:
+    winner_team = team_b
+    loser_team = team_a
+elif team_a.score == team_b.score:
+    winner_team = None
+    loser_team = None
 
-""" Bausteine
-"""
+if winner_team:
+    print("Winner is", winner_team.name)
+    for player in winner_team.players:
+        player.xp += config.rules.xp["match_win"]
+        print(player.name, player.xp, player.hp)
+else:
+    print("Draw Game!")
 exit()

@@ -236,4 +236,5 @@ def process_play(team_a: Team, team_b: Team) -> tuple[
             print(attacker.name, "charges to attack zone!")
             player_action = PlayerAction.CHARGE
     a_result = process_attack(attacker, defending_team, attacking_team)
+    print("")
     return mf_result, player_action, a_result
