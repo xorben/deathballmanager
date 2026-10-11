@@ -188,7 +188,6 @@ def player_decide_action(player: Player) -> Literal[PlayerAction.CHARGE, PlayerA
     :return:
     """
     roll = dice.roll_1d10()
-    print(roll)
     player_action = None
     if 0 < player.hp < 30:
         # Player is to weak. Check if he has enough vitality
@@ -209,3 +208,32 @@ def player_decide_action(player: Player) -> Literal[PlayerAction.CHARGE, PlayerA
         else:
             player_action = PlayerAction.PASS
     return player_action
+
+
+def process_play(team_a: Team, team_b: Team) -> tuple[
+    MidfieldResult, Literal[PlayerAction.CHARGE, PlayerAction.PASS] | None, AttackResult]:
+    """Processes a whole player Attack
+    process_duel()      → ein fight between players
+    process_midfield()  → competing in the midfield after kickoff
+    process_attack()    → attack towards the goal
+    """
+    mf_result = process_midfield(team_a, team_b)
+    print(mf_result.ball_carrier, "fights against", mf_result.defeated_player)
+    sleep(1)
+    attacking_team = mf_result.winning_team
+    if attacking_team == team_a:
+        defending_team = team_b
+    else:
+        defending_team = team_a
+    attacker = mf_result.ball_carrier
+    player_action = player_decide_action(attacker)
+    if player_action == PlayerAction.PASS:
+        passed_to_player = select_random_player_in_zone(attacking_team, Zone.ATTACK)
+        if passed_to_player is not None:
+            print(attacker.name, "passed ball to", passed_to_player.name)
+            attacker = passed_to_player
+        else:
+            print(attacker.name, "charges to attack zone!")
+            player_action = PlayerAction.CHARGE
+    a_result = process_attack(attacker, defending_team, attacking_team)
+    return mf_result, player_action, a_result

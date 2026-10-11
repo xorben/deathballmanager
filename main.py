@@ -39,27 +39,11 @@ team_b.formation[Zone.ATTACK].append(team_b.players[3])
 team_b.formation[Zone.ATTACK].append(team_b.players[4])
 
 
+mf_result, player_action, a_result = match_engine.process_play(
+    team_a,
+    team_b
+)
 
-mf_result = match_engine.process_midfield(team_a, team_b)
-print(mf_result.ball_carrier, "fights against", mf_result.defeated_player)
-sleep(1)
-attacking_team = mf_result.winning_team
-if attacking_team == team_a:
-    defending_team = team_b
-else:
-    defending_team = team_a
-attacker = mf_result.ball_carrier
-player_action = match_engine.player_decide_action(attacker)
-if player_action == PlayerAction.PASS:
-    passed_to_player = match_engine.select_random_player_in_zone(attacking_team, Zone.ATTACK)
-    if passed_to_player is not None:
-        print(attacker.name, "passed ball to", passed_to_player.name)
-        attacker = passed_to_player
-    else:
-        print(attacker.name, "charges to attack zone!")
-        player_action = PlayerAction.CHARGE
-a_result = match_engine.process_attack(attacker, defending_team, attacking_team)
-print(a_result.stopped)
-
-
+""" Bausteine
+"""
 exit()
