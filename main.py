@@ -7,16 +7,16 @@ from domain.zones import Zone
 from domain.player_action import PlayerAction
 from time import sleep
 from engine.dice import roll_1d10
-
+from engine import match_processor
 
 team_a = Team(
     "Solar Smashers",
     [
         Player(0, 0, "Dominator", 2),
-        Player(100, 0, "Slasher", 4),
-        Player(100, 0, "Beastmaster", 4),
-        Player(100, 0, "Godslayer", 3),
-        Player(100, 0, "Tearmaker", 5)
+        Player(0, 0, "Slasher", 4),
+        Player(0, 0, "Beastmaster", 4),
+        Player(0, 0, "Godslayer", 3),
+        Player(0, 0, "Tearmaker", 5)
     ]
 )
 team_a.formation[Zone.DEFENSE].append(team_a.players[1])
@@ -29,11 +29,11 @@ team_a.formation[Zone.ATTACK].append(team_a.players[4])
 team_b = Team(
     "Lunar Ionstorm",
     [
-        Player(100, 0, "Fistor", 3),
-        Player(100, 0, "Hammerslammer", 5),
-        Player(100, 0, "Masterblaster", 4),
-        Player(100, 0, "Angelraper", 4),
-        Player(100, 0, "Ironsight", 2)
+        Player(0, 0, "Fistor", 3),
+        Player(0, 0, "Hammerslammer", 5),
+        Player(0, 0, "Masterblaster", 4),
+        Player(0, 0, "Angelraper", 4),
+        Player(0, 0, "Ironsight", 2)
     ]
 )
 team_b.formation[Zone.DEFENSE].append(team_b.players[1])
@@ -42,6 +42,6 @@ team_b.formation[Zone.MIDFIELD].append(team_b.players[0])
 team_b.formation[Zone.ATTACK].append(team_b.players[3])
 team_b.formation[Zone.ATTACK].append(team_b.players[4])
 
-match_engine.process_match(team_a, team_b)
-
+#match_engine.process_match(team_a, team_b)
+match_processor.process_match(team_a, team_b)
 exit()
