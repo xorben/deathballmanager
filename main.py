@@ -12,11 +12,11 @@ from engine import match_processor
 team_a = Team(
     "Solar Smashers",
     [
-        Player(0, 0, "Dominator", 2),
-        Player(0, 0, "Slasher", 4),
-        Player(0, 0, "Beastmaster", 4),
-        Player(0, 0, "Godslayer", 3),
-        Player(0, 0, "Tearmaker", 5)
+        Player(50, 0, "Dominator", 2),
+        Player(50, 0, "Slasher", 4),
+        Player(50, 0, "Beastmaster", 4),
+        Player(50, 0, "Godslayer", 3),
+        Player(50, 0, "Tearmaker", 5)
     ]
 )
 team_a.formation[Zone.DEFENSE].append(team_a.players[1])
@@ -29,11 +29,11 @@ team_a.formation[Zone.ATTACK].append(team_a.players[4])
 team_b = Team(
     "Lunar Ionstorm",
     [
-        Player(0, 0, "Fistor", 3),
-        Player(0, 0, "Hammerslammer", 5),
-        Player(0, 0, "Masterblaster", 4),
-        Player(0, 0, "Angelraper", 4),
-        Player(0, 0, "Ironsight", 2)
+        Player(50, 0, "Fistor", 3),
+        Player(50, 0, "Hammerslammer", 5),
+        Player(50, 0, "Masterblaster", 4),
+        Player(50, 0, "Angelraper", 4),
+        Player(50, 0, "Ironsight", 2)
     ]
 )
 team_b.formation[Zone.DEFENSE].append(team_b.players[1])
