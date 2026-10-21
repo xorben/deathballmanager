@@ -14,6 +14,7 @@ from domain.zones import Zone
 from domain.player_action import PlayerAction
 from i18n.message_key import MessageKey
 from i18n.messages_en import messages
+from domain.match import Match
 
 def process_duel(attacker: Player, defender: Player) -> DuelResult:
     """Processing duel between two players within a play
@@ -94,7 +95,7 @@ def goal_attempt(attacking_player: Player) -> bool:
         return False
 
 
-def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) -> AttackResult:
+def process_attack(attacker: Player, defending_team:Team, attacking_team: Team, match: Match) -> AttackResult:
     """
     Handels the play through the field and switching through the zones.
     :param attacking_team:
@@ -112,33 +113,60 @@ def process_attack(attacker: Player, defending_team:Team, attacking_team: Team) 
     if not stopped:
         # Attacker is in attack zone and fights against enemy defense
         print(messages[MessageKey.ATTACK_ZONE].format(attacker=attacker.name))
+        match.add_event(
+            MessageKey.ATTACK_ZONE,
+            attacker=attacker.name
+        )
         sleep(1)
         d_result = process_zone_attack(attacker, defending_team, Zone.DEFENSE)
         if d_result is not None:
             defender = d_result.defender
             print(messages[MessageKey.DEFENSE_DUEL].format(attacker=attacker.name,defender=defender.name))
+            match.add_event(
+                MessageKey.DEFENSE_DUEL,
+                attacker=attacker.name,
+                defender=defender.name
+            )
         else:
             print(messages[MessageKey.DEFENSE_EMPTY].format(attacker=attacker.name))
+            match.add_event(
+                MessageKey.DEFENSE_EMPTY,
+                attacker=attacker.name
+            )
         sleep(1)
         last_field = Zone.ATTACK
         if d_result is not None and d_result.winner == attacker:
             gained_xp += d_result.gained_xp
         if d_result is not None and d_result.winner != attacker:
             print(messages[MessageKey.ATTACK_STOPPED].format(attacker=attacker.name, defender=defender.name))
+            match.add_event(
+                MessageKey.ATTACK_STOPPED,
+                attacker=attacker.name,
+                defender=defender.name
+            )
             stopped = True
     if not stopped:
         print(messages[MessageKey.GOAL_ATTEMPT])
+        match.add_event(
+            MessageKey.GOAL_ATTEMPT
+        )
         last_field = Zone.GOAL
         goal = goal_attempt(attacker)
         if goal:
             print(messages[MessageKey.GOAL].format(team=attacking_team.name))
+            match.add_event(
+                MessageKey.GOAL,
+                team=attacking_team.name
+            )
             attacker.xp += rules.Xp.GOAL
             attacking_team.score += 1
             points_scored = 1
             gained_xp += rules.Xp.GOAL
         else:
             print(messages[MessageKey.GOAL_MISSED])
-
+            match.add_event(
+                MessageKey.GOAL_MISSED
+            )
     a_result = AttackResult(
         attacker,
         stopped,
@@ -221,14 +249,22 @@ def player_decide_action(player: Player) -> Literal[PlayerAction.CHARGE, PlayerA
     return player_action
 
 
-def process_play(team_a: Team, team_b: Team) -> tuple[MidfieldResult, PlayerAction, AttackResult]:
+def process_play(match: Match) -> tuple[
+    MidfieldResult, Literal[PlayerAction.CHARGE, PlayerAction.PASS] | None, AttackResult]:
     """Processes a whole player Attack
     process_duel()      → a fight between players
     process_midfield()  → competing in the midfield after kickoff
     process_attack()    → attack towards the goal
     """
+    team_a = match.team_a
+    team_b = match.team_b
     mf_result = process_midfield(team_a, team_b)
     print(messages[MessageKey.MIDFIELD_DUEL].format(player_a=mf_result.ball_carrier, player_b=mf_result.defeated_player))
+    match.add_event(
+        MessageKey.MIDFIELD_DUEL,
+        player_a=mf_result.ball_carrier,
+        player_b=mf_result.defeated_player
+    )
     sleep(1)
     attacking_team = mf_result.winning_team
     if attacking_team == team_a:
@@ -241,18 +277,27 @@ def process_play(team_a: Team, team_b: Team) -> tuple[MidfieldResult, PlayerActi
         passed_to_player = select_random_player_in_zone(attacking_team, Zone.ATTACK)
         if passed_to_player is not None:
             print(messages[MessageKey.PASS].format(player=attacker.name, receiver=passed_to_player.name))
+            match.add_event(
+                MessageKey.PASS,
+                player=attacker.name,
+                receiver=passed_to_player.name
+            )
             attacker = passed_to_player
         else:
             print(messages[MessageKey.CHARGE].format(player=attacker.name))
+            match.add_event(
+                MessageKey.CHARGE,
+                player=attacker.name
+            )
             player_action = PlayerAction.CHARGE
-    a_result = process_attack(attacker, defending_team, attacking_team)
+    a_result = process_attack(attacker, defending_team, attacking_team, match)
     return mf_result, player_action, a_result
 
 
 def is_team_eliminated(team: Team) -> bool:
-    """Checks if a team is eleminated"""
-    is_eleminated = False
+    """Checks if a team is eliminated"""
+    is_eliminated = False
     amount_active_players = get_all_active_player(team)
     if len(amount_active_players) == 0:
-        is_eleminated = True
-    return is_eleminated
+        is_eliminated = True
+    return is_eliminated

@@ -7,8 +7,10 @@ from i18n.messages_en import messages
 from time import sleep
 from config import rules
 
-def process_match(team_a: Team, team_b: Team) -> None:
+def process_match(match) -> None:
     """Processes whole match."""
+    team_a = match.team_a
+    team_b = match.team_b
     winner_team = None
     loser_team = None
     c = 0
@@ -22,7 +24,7 @@ def process_match(team_a: Team, team_b: Team) -> None:
             if d_result >= attack_possibility:
                 c += 1
                 print(messages[MessageKey.MINUTE_ACTION].format(minute=minute,action_number=c))
-                process_play(team_a, team_b)
+                process_play(match)
                 # process_play may have eliminated a team
                 is_team_a_eliminated = is_team_eliminated(team_a)
                 is_team_b_eliminated = is_team_eliminated(team_b)
@@ -33,15 +35,17 @@ def process_match(team_a: Team, team_b: Team) -> None:
                     else:
                         winner_team = team_a
                         loser_team = team_b
-                    break
-
-                    print(
-                        messages[MessageKey.TEAM_ELIMINATED].format(
-                            team=loser_team.name
-                        )
+                    print(messages[MessageKey.TEAM_ELIMINATED].format(team=loser_team.name))
+                    match.add_event(
+                        MessageKey.TEAM_ELIMINATED,
+                        team=loser_team.name
                     )
+                    break
             if minute == 30:
                 print(messages[MessageKey.HALFTIME])
+                match.add_event(
+                    MessageKey.HALFTIME
+                )
                 sleep(2)
         elif is_team_a_eliminated != is_team_b_eliminated:
             c += 1
@@ -54,6 +58,10 @@ def process_match(team_a: Team, team_b: Team) -> None:
                 winner_team = team_a
                 loser_team = team_b
             print(messages[MessageKey.TEAM_ELIMINATED].format(team=loser_team.name))
+            match.add_event(
+                MessageKey.TEAM_ELIMINATED,
+                team=loser_team.name
+            )
             if winner_team.score <= loser_team.score:
                 winner_team.score = 3
                 loser_team.score = 0
@@ -65,9 +73,15 @@ def process_match(team_a: Team, team_b: Team) -> None:
             c += 1
             print(messages[MessageKey.MINUTE_ACTION].format(minute=minute, action_number=c))
             print(messages[MessageKey.BOTH_TEAMS_ELIMINATED])
+            match.add_event(
+                MessageKey.BOTH_TEAMS_ELIMINATED
+            )
             break
         elif is_team_a_eliminated and is_team_b_eliminated:
             print(messages[MessageKey.BOTH_TEAMS_ELIMINATED])
+            match.add_event(
+                MessageKey.BOTH_TEAMS_ELIMINATED
+            )
             break
 
 
@@ -75,7 +89,9 @@ def process_match(team_a: Team, team_b: Team) -> None:
     print(messages[MessageKey.FULLTIME])
     print(messages[MessageKey.SCORE].format(team=team_a.name, score=team_a.score))
     print(messages[MessageKey.SCORE].format(team=team_b.name, score=team_b.score))
-
+    match.add_event(
+        MessageKey.FULLTIME
+    )
 
     if team_a.score > team_b.score:
         winner_team = team_a
@@ -95,3 +111,6 @@ def process_match(team_a: Team, team_b: Team) -> None:
         print(loser_team.get_player_stats())
     else:
         print(messages[MessageKey.DRAW])
+        match.add_event(
+            MessageKey.DRAW
+        )

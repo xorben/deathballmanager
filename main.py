@@ -8,6 +8,7 @@ from domain.player_action import PlayerAction
 from time import sleep
 from engine.dice import roll_1d10
 from engine import match_processor
+from domain.match import Match
 
 team_a = Team(
     "Solar Smashers",
@@ -42,6 +43,7 @@ team_b.formation[Zone.MIDFIELD].append(team_b.players[0])
 team_b.formation[Zone.ATTACK].append(team_b.players[3])
 team_b.formation[Zone.ATTACK].append(team_b.players[4])
 
-#match_engine.process_match(team_a, team_b)
-match_processor.process_match(team_a, team_b)
+
+match = Match(team_a, team_b)
+match_processor.process_match(match)
 exit()
