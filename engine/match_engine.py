@@ -262,8 +262,8 @@ def process_play(match: Match) -> tuple[
     print(messages[MessageKey.MIDFIELD_DUEL].format(player_a=mf_result.ball_carrier, player_b=mf_result.defeated_player))
     match.add_event(
         MessageKey.MIDFIELD_DUEL,
-        player_a=mf_result.ball_carrier,
-        player_b=mf_result.defeated_player
+        player_a=mf_result.ball_carrier.name,
+        player_b=mf_result.defeated_player.name
     )
     sleep(1)
     attacking_team = mf_result.winning_team

@@ -46,4 +46,6 @@ team_b.formation[Zone.ATTACK].append(team_b.players[4])
 
 match = Match(team_a, team_b)
 match_processor.process_match(match)
+for event in match.events:
+    print(event)
 exit()
