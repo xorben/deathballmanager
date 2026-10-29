@@ -8,6 +8,7 @@ from engine.match_engine import (get_all_active_player,
 from domain.zones import Zone
 
 
+
 def test_get_all_active_player_all_alive():
     player_1 = Player(10, 0, "Player 1", 3)
     player_2 = Player(20, 0, "Player 2", 4)
@@ -79,9 +80,9 @@ def test_select_random_player_in_zone_empty():
             Player(0, 0, "Test Player 3", 4),
         ]
     )
-    team.formation[Zone.DEFENSE].append(team.players[1])
-    team.formation[Zone.DEFENSE].append(team.players[2])
-    team.formation[Zone.DEFENSE].append(team.players[0])
+    team.formation[Zone.ATTACK].append(team.players[1])
+    team.formation[Zone.ATTACK].append(team.players[2])
+    team.formation[Zone.MIDFIELD].append(team.players[0])
     result = select_random_player_in_zone(team, Zone.DEFENSE)
     assert result is None
 
