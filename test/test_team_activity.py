@@ -1,14 +1,3 @@
-"""
-get_all_active_player() liefert nur Spieler mit hp > 0
-is_team_eliminated() → True, wenn alle HP 0 sind
-is_team_eliminated() → False, wenn mindestens ein Spieler aktiv ist
-select_random_player_in_zone() → None, wenn Zone leer ist
-select_random_player_in_zone() → liefert nur aktive Spieler
-select_midfield_player() → nimmt MIDFIELD-Spieler
-select_midfield_player() → fällt bei leerem Midfield auf DEFENSE zurück
-select_midfield_player() → fällt danach auf ATTACK zurück
-"""
-
 from domain.player import Player
 from domain.team import Team
 from engine.match_engine import (get_all_active_player,
@@ -17,6 +6,7 @@ from engine.match_engine import (get_all_active_player,
                                  select_midfield_player
                                  )
 from domain.zones import Zone
+
 
 def test_get_all_active_player_all_alive():
     player_1 = Player(10, 0, "Player 1", 3)
@@ -97,7 +87,6 @@ def test_select_random_player_in_zone_empty():
 
 
 def test_select_midfield_player_from_midfield():
-    """Checks that an active player from MIDFIELD is selected first.."""
     player_1 = Player(1, 0, "Test Player 1", 2)
     player_2 = Player(3, 0, "Test Player 2", 4)
     player_3 = Player(22, 0, "Test Player 3", 4)
@@ -112,6 +101,35 @@ def test_select_midfield_player_from_midfield():
     result = select_midfield_player(team)
     assert result in (player_2, player_4)
 
+
 def test_select_midfield_player_fallback_defense():
-    """Checks that a DEFENSE player was """"— Prüft, dass bei leerem/inaktivem Midfield auf DEFENSE ausgewichen wird.
-#test_select_midfield_player_fallback_attack — Prüft, dass erst dann auf ATTACK ausgewichen wird, wenn auch Defense nichts liefert.
+    """Checks that a DEFENSE player was chosen"""
+    player_1 = Player(1, 0, "Test Player 1", 2)
+    player_2 = Player(0, 0, "Test Player 2", 4)
+    player_3 = Player(22, 0, "Test Player 3", 4)
+    player_4 = Player(0, 0, "Test Player 4", 4)
+    player_5 = Player(2, 0, "Test Player 5", 4)
+    team = Team("Test Team", [player_1, player_2, player_3, player_4, player_5])
+    team.formation[Zone.DEFENSE].append(player_1)
+    team.formation[Zone.MIDFIELD].append(player_2)
+    team.formation[Zone.ATTACK].append(player_3)
+    team.formation[Zone.MIDFIELD].append(player_4)
+    team.formation[Zone.DEFENSE].append(player_5)
+    result = select_midfield_player(team)
+    assert result in (player_1, player_5)
+
+
+def test_select_midfield_player_fallback_attack():
+    player_1 = Player(0, 0, "Test Player 1", 2)
+    player_2 = Player(0, 0, "Test Player 2", 4)
+    player_3 = Player(22, 0, "Test Player 3", 4)
+    player_4 = Player(0, 0, "Test Player 4", 4)
+    player_5 = Player(0, 0, "Test Player 5", 4)
+    team = Team("Test Team", [player_1, player_2, player_3, player_4, player_5])
+    team.formation[Zone.DEFENSE].append(player_1)
+    team.formation[Zone.MIDFIELD].append(player_2)
+    team.formation[Zone.ATTACK].append(player_3)
+    team.formation[Zone.MIDFIELD].append(player_4)
+    team.formation[Zone.DEFENSE].append(player_5)
+    result = select_midfield_player(team)
+    assert result is player_3
