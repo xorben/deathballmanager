@@ -40,6 +40,11 @@ def process_match(match) -> None:
                         MessageKey.TEAM_ELIMINATED,
                         team=loser_team.name
                     )
+                    if winner_team.score <= loser_team.score:
+                        winner_team.score = 3
+                        loser_team.score = 0
+                    elif winner_team.score - loser_team.score < 3:
+                        winner_team.score = loser_team.score + 3
                     break
             if minute == 30:
                 print(messages[MessageKey.HALFTIME])
@@ -69,15 +74,9 @@ def process_match(match) -> None:
                 winner_team.score = loser_team.score + 3
             break
         elif is_team_a_eliminated and is_team_b_eliminated:
-            # Booth teams are eliminated
+            # Both teams are eliminated
             c += 1
             print(messages[MessageKey.MINUTE_ACTION].format(minute=minute, action_number=c))
-            print(messages[MessageKey.BOTH_TEAMS_ELIMINATED])
-            match.add_event(
-                MessageKey.BOTH_TEAMS_ELIMINATED
-            )
-            break
-        elif is_team_a_eliminated and is_team_b_eliminated:
             print(messages[MessageKey.BOTH_TEAMS_ELIMINATED])
             match.add_event(
                 MessageKey.BOTH_TEAMS_ELIMINATED
@@ -107,8 +106,10 @@ def process_match(match) -> None:
         for player in winner_team.players:
             player.xp += rules.Xp.MATCH_WIN
         print(messages[MessageKey.WINNER].format(team=winner_team.name))
-        print(winner_team.get_player_stats())
-        print(loser_team.get_player_stats())
+        match.add_event(
+            MessageKey.WINNER,
+            team=winner_team.name
+        )
     else:
         print(messages[MessageKey.DRAW])
         match.add_event(

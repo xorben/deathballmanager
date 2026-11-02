@@ -252,7 +252,7 @@ def player_decide_action(player: Player) -> Literal[PlayerAction.CHARGE, PlayerA
 
 def process_play(match: Match) -> tuple[
     MidfieldResult, Literal[PlayerAction.CHARGE, PlayerAction.PASS] | None, AttackResult]:
-    """Processes a whole player Attack
+    """Processes a whole player Attackis_team_a_eliminated
     process_duel()      → a fight between players
     process_midfield()  → competing in the midfield after kickoff
     process_attack()    → attack towards the goal
