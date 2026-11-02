@@ -6,8 +6,10 @@ class DuelResult:
                  gained_xp: int,
                  lost_hp: int,
                  ko: bool,
-                 defender: Player
+                 defender: Player,
+                 attacker: Player
     ):
+        self.attacker = attacker
         self.winner = winner
         self.loser = loser
         self.damage = damage

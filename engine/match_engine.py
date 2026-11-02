@@ -38,7 +38,8 @@ def process_duel(attacker: Player, defender: Player) -> DuelResult:
         winner_gained_xp,
         loser_lost_hp,
         ko,
-        defender
+        defender,
+        attacker
     )
     return d_result
 

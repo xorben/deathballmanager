@@ -112,7 +112,7 @@ def test_duel_result_values(monkeypatch):
     monkeypatch.setattr(duel_engine.dice, "roll_1d10", lambda: next(rolls))
 
     result = process_duel(attacker, defender)
-
+    print(result)
     assert result.attacker is attacker
     assert result.defender is defender
     assert result.winner is attacker
