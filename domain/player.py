@@ -12,7 +12,6 @@ class Player:
                  level:int,
                  position: Zone,
                  age: int,
-                 market_value: int,
                  implants: list,
                  career_stats: CareerStats
 
@@ -26,9 +25,17 @@ class Player:
         self.level = level
         self.position = position
         self.age = age
-        self.market_value = market_value
         self.implants = implants
         self.career_stats = career_stats
+
+    @property
+    def market_value(self) -> None:
+        mv =    self.xp * 10 \
+                + self.strength * 30 \
+                + self.max_hp * 20 \
+                - self.age * 10
+        return mv
+
 
     def __str__(self):
         return self.name

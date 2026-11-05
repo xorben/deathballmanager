@@ -9,15 +9,25 @@ from time import sleep
 from engine.dice import roll_1d10
 from engine import match_processor
 from domain.match import Match
-
+from domain.career_stats import CareerStats
 team_a = Team(
     "Solar Smashers",
     [
-        Player(50, 0, "Dominator", 2),
-        Player(50, 0, "Slasher", 4),
-        Player(50, 0, "Beastmaster", 4),
-        Player(50, 0, "Godslayer", 3),
-        Player(50, 0, "Tearmaker", 5)
+        Player(50, 0, "Dominator", 2,
+               1001,30, 0, Zone.MIDFIELD,
+               20,  [], CareerStats()),
+        Player(50, 0, "Slasher", 4,
+               1002,30, 0, Zone.DEFENSE,
+               19, [], CareerStats()),
+        Player(50, 0, "Beastmaster", 4,
+               1003,30, 0, Zone.DEFENSE,
+               21, [], CareerStats()),
+        Player(50, 0, "Godslayer", 3,
+               1004,30, 0, Zone.ATTACK,
+               20, [], CareerStats()),
+        Player(50, 0, "Tearmaker", 5,
+               1005,30, 0, Zone.ATTACK,
+               20, [], CareerStats())
     ]
 )
 team_a.formation[Zone.DEFENSE].append(team_a.players[1])
