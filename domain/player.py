@@ -50,11 +50,14 @@ class Player:
 
 
     @property
-    def market_value(self) -> None:
+    def market_value(self) -> int:
         mv =    self.xp * 10 \
                 + self.strength * 30 \
                 + self.max_hp * 20 \
                 - self.age * 10
+
+        for implant in self.implants:
+            mv += implant.tier * 20
         return mv
 
 
