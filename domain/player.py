@@ -1,3 +1,4 @@
+from domain.attributes import Attribute
 from domain.zones import Zone
 from domain.career_stats import CareerStats
 
@@ -6,9 +7,9 @@ class Player:
                  hp: int,
                  xp: int,
                  name: str,
-                 strength: int,
+                 basic_strength: int,
                  player_id: int,
-                 max_hp: int,
+                 basic_max_hp: int,
                  level:int,
                  position: Zone,
                  age: int,
@@ -20,13 +21,32 @@ class Player:
         self.hp = hp
         self.xp = xp
         self.name = name
-        self.strength = strength
-        self.max_hp = max_hp
+        self.basic_strength = basic_strength
+        self.basic_max_hp = basic_max_hp
         self.level = level
         self.position = position
         self.age = age
         self.implants = implants
         self.career_stats = career_stats
+
+
+    @property
+    def strength(self) -> int:
+        effective_strength = self.basic_strength
+        for implant in self.implants:
+            if implant.modifiers.get(Attribute.STRENGTH):
+                effective_strength += implant.modifiers.get(Attribute.STRENGTH)
+        return effective_strength
+
+
+    @property
+    def max_hp(self) -> int:
+        effective_max_hp = self.basic_max_hp
+        for implant in self.implants:
+            if implant.modifiers.get(Attribute.MAX_HP):
+                effective_max_hp += implant.modifiers.get(Attribute.MAX_HP)
+        return effective_max_hp
+
 
 
     @property

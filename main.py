@@ -32,6 +32,7 @@ team_a.formation[Zone.MIDFIELD].append(team_a.players[0])
 team_a.formation[Zone.ATTACK].append(team_a.players[3])
 team_a.formation[Zone.ATTACK].append(team_a.players[4])
 
+exit()
 
 team_b = Team(
     "Lunar Ionstorm",
