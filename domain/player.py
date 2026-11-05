@@ -28,6 +28,7 @@ class Player:
         self.implants = implants
         self.career_stats = career_stats
 
+
     @property
     def market_value(self) -> None:
         mv =    self.xp * 10 \

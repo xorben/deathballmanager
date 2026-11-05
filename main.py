@@ -1,21 +1,17 @@
-import config.rules
-import engine
 from domain.player import Player
-import engine.match_engine as match_engine
 from domain.team import Team
 from domain.zones import Zone
-from domain.player_action import PlayerAction
-from time import sleep
-from engine.dice import roll_1d10
 from engine import match_processor
 from domain.match import Match
 from domain.career_stats import CareerStats
+import config.implants as implants
+
 team_a = Team(
     "Solar Smashers",
     [
         Player(50, 0, "Dominator", 2,
                1001,30, 0, Zone.MIDFIELD,
-               20,  [], CareerStats()),
+               20,  [implants.HELMET_1, implants.ARM_AMPLIFIER], CareerStats()),
         Player(50, 0, "Slasher", 4,
                1002,30, 0, Zone.DEFENSE,
                19, [], CareerStats()),
