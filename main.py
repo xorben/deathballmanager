@@ -11,21 +11,27 @@ team_a = Team(
     [
         Player(50, 0, "Dominator", 2,
                1001,30, 0, Zone.MIDFIELD,
-               20,  [implants.HELMET_1, implants.ARM_AMPLIFIER], CareerStats()),
+               20, CareerStats()),
         Player(50, 0, "Slasher", 4,
                1002,30, 0, Zone.DEFENSE,
-               19, [], CareerStats()),
+               19, CareerStats()),
         Player(50, 0, "Beastmaster", 4,
                1003,30, 0, Zone.DEFENSE,
-               21, [], CareerStats()),
+               21, CareerStats()),
         Player(50, 0, "Godslayer", 3,
                1004,30, 0, Zone.ATTACK,
-               20, [], CareerStats()),
+               20, CareerStats()),
         Player(50, 0, "Tearmaker", 5,
                1005,30, 0, Zone.ATTACK,
-               20, [], CareerStats())
+               20, CareerStats())
     ]
 )
+team_a.players[0].install_implant(implants.HELMET_1)
+print(team_a.players[0].implants)
+team_a.players[0].remove_implant(implants.HELMET_1)
+print(team_a.players[0].implants)
+exit()
+
 team_a.formation[Zone.DEFENSE].append(team_a.players[1])
 team_a.formation[Zone.DEFENSE].append(team_a.players[2])
 team_a.formation[Zone.MIDFIELD].append(team_a.players[0])
