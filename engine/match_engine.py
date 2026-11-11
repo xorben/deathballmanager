@@ -49,7 +49,7 @@ def get_all_active_player(team: Team) -> list[Player]:
     :param team:
     :return:
     """
-    active_players = [p for p in team.players if p.hp > 0]
+    active_players = [p for p in team.match_players if p.hp > 0]
     return active_players
 
 

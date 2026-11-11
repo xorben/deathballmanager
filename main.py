@@ -8,53 +8,50 @@ import config.implants as implants
 
 team_a = Team(
     "Solar Smashers",
-    [
-        Player(50, 0, "Dominator", 2,
-               1001,30, 0, Zone.MIDFIELD,
-               20, CareerStats()),
-        Player(50, 0, "Slasher", 4,
-               1002,30, 0, Zone.DEFENSE,
-               19, CareerStats()),
-        Player(50, 0, "Beastmaster", 4,
-               1003,30, 0, Zone.DEFENSE,
-               21, CareerStats()),
-        Player(50, 0, "Godslayer", 3,
-               1004,30, 0, Zone.ATTACK,
-               20, CareerStats()),
-        Player(50, 0, "Tearmaker", 5,
-               1005,30, 0, Zone.ATTACK,
-               20, CareerStats())
-    ]
 )
-team_a.players[0].install_implant(implants.HELMET_1)
-print(team_a.players[0].implants)
-team_a.players[0].remove_implant(implants.HELMET_1)
-print(team_a.players[0].implants)
+
+player_dominator = Player(50, 0, "Dominator", 2,
+       1001, 30, 0, Zone.MIDFIELD,
+       20, CareerStats())
+player_slasher = Player(50, 0, "Slasher", 4,
+       1002, 30, 0, Zone.DEFENSE,
+       19, CareerStats())
+player_beastmaster = Player(50, 0, "Beastmaster", 4,
+       1003, 30, 0, Zone.DEFENSE,
+       21, CareerStats())
+player_godslayer = Player(50, 0, "Godslayer", 3,
+       1004, 30, 0, Zone.ATTACK,
+       20, CareerStats())
+player_tearmaker = Player(50, 0, "Tearmaker", 5,
+       1005, 30, 0, Zone.ATTACK,
+       20, CareerStats())
+player_seth = Player(50, 0, "Seth", 1,
+       1006, 30, 0, Zone.MIDFIELD,
+       18, CareerStats())
+
+# all to team
+team_a.add_player_to_team(player_dominator)
+team_a.add_player_to_team(player_slasher)
+team_a.add_player_to_team(player_beastmaster)
+team_a.add_player_to_team(player_godslayer)
+team_a.add_player_to_team(player_tearmaker)
+team_a.add_player_to_team(player_seth)
+
+team_a.add_player_to_match_team(player_dominator)
+team_a.add_player_to_match_team(player_slasher)
+team_a.add_player_to_match_team(player_beastmaster)
+team_a.add_player_to_match_team(player_godslayer)
+team_a.add_player_to_match_team(player_tearmaker)
+team_a.add_player_to_match_team(player_seth)
+print(team_a.get_player_stats(match_players=True))
+
 exit()
 
-team_a.formation[Zone.DEFENSE].append(team_a.players[1])
-team_a.formation[Zone.DEFENSE].append(team_a.players[2])
-team_a.formation[Zone.MIDFIELD].append(team_a.players[0])
-team_a.formation[Zone.ATTACK].append(team_a.players[3])
-team_a.formation[Zone.ATTACK].append(team_a.players[4])
-
+team_a.match_players[0].install_implant(implants.HELMET_1)
+print(team_a.match_players[0].implants)
+team_a.match_players[0].remove_implant(implants.HELMET_1)
+print(team_a.match_players[0].implants)
 exit()
-
-team_b = Team(
-    "Lunar Ionstorm",
-    [
-        Player(50, 0, "Fistor", 3),
-        Player(50, 0, "Hammerslammer", 5),
-        Player(50, 0, "Masterblaster", 4),
-        Player(50, 0, "Angelraper", 4),
-        Player(50, 0, "Ironsight", 2)
-    ]
-)
-team_b.formation[Zone.DEFENSE].append(team_b.players[1])
-team_b.formation[Zone.DEFENSE].append(team_b.players[2])
-team_b.formation[Zone.MIDFIELD].append(team_b.players[0])
-team_b.formation[Zone.ATTACK].append(team_b.players[3])
-team_b.formation[Zone.ATTACK].append(team_b.players[4])
 
 
 match = Match(team_a, team_b)

@@ -397,7 +397,7 @@ def test_select_random_player_in_zone_only_active():
     team.formation[Zone.DEFENSE].append(player_2)
     team.formation[Zone.DEFENSE].append(player_3)
     result = select_random_player_in_zone(team, Zone.DEFENSE)
-    assert result in [team.players[1], team.players[2]]
+    assert result in [team.match_players[1], team.match_players[2]]
     assert result.hp > 0
 
 
@@ -410,9 +410,9 @@ def test_select_random_player_in_zone_empty():
             Player(0, 0, "Test Player 3", 4),
         ]
     )
-    team.formation[Zone.ATTACK].append(team.players[1])
-    team.formation[Zone.ATTACK].append(team.players[2])
-    team.formation[Zone.MIDFIELD].append(team.players[0])
+    team.formation[Zone.ATTACK].append(team.match_players[1])
+    team.formation[Zone.ATTACK].append(team.match_players[2])
+    team.formation[Zone.MIDFIELD].append(team.match_players[0])
     result = select_random_player_in_zone(team, Zone.DEFENSE)
     assert result is None
 
