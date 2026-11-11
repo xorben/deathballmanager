@@ -1,8 +1,10 @@
-"""Consolidated Death Ball Manager V0.1 / V0.2 regression tests.
+"""Death Ball Manager V0.2 regression suite.
 
 Run with: pytest test/test_all.py -v
-Do not leave the original test_*.py files alongside this file if you want one
-execution of each test (pytest will collect both otherwise).
+
+The whole player roster is held in Team.players. Team.match_players is derived
+from the zone-based formation. Tests deliberately accept lineups with fewer
+than five players or unoccupied zones; only the upper limit is enforced.
 """
 
 import itertools
@@ -48,6 +50,21 @@ def Player(hp, xp, name, basic_strength, player_id=None,
         age=age,
         career_stats=CareerStats() if career_stats is None else career_stats,
     )
+
+
+def make_team(name: str, players=None, *, auto_lineup: bool = True) -> Team:
+    """Build a test team using the public roster and lineup APIs.
+
+    Old V0.1 tests implicitly used the whole roster as match players. By
+    default, preserve that fixture behavior. Tests targeting specific zones
+    set auto_lineup=False and explicitly select the match players.
+    """
+    team = Team(name)
+    for member in players or []:
+        team.add_player_to_team(member)
+        if auto_lineup:
+            team.add_player_to_match_team(member)
+    return team
 
 
 @pytest.fixture
@@ -338,10 +355,177 @@ def test_career_stats_can_be_updated(player):
 # TEAM TESTS
 # ============================================================================
 
+
+# --------------------------------------------------
+# Kader- und Matchaufstellungsverwaltung (V0.2)
+# --------------------------------------------------
+
+
+def test_team_starts_with_empty_roster_and_lineup():
+    team = Team("Solar Smashers")
+
+    assert team.players == []
+    assert team.match_players == []
+    assert all(len(players) == 0 for players in team.formation.values())
+
+
+def test_add_player_to_team_only_adds_to_roster():
+    team = Team("Solar Smashers")
+    defender = Player(50, 0, "Defender", 3, position=Zone.DEFENSE)
+
+    team.add_player_to_team(defender)
+
+    assert team.players == [defender]
+    assert team.match_players == []
+
+
+def test_add_player_to_team_prevents_duplicates():
+    team = Team("Solar Smashers")
+    defender = Player(50, 0, "Defender", 3, position=Zone.DEFENSE)
+
+    team.add_player_to_team(defender)
+    team.add_player_to_team(defender)
+
+    assert team.players == [defender]
+
+
+def test_add_player_to_match_team_uses_fixed_position():
+    team = Team("Solar Smashers")
+    defender = Player(50, 0, "Defender", 3, position=Zone.DEFENSE)
+    team.add_player_to_team(defender)
+
+    team.add_player_to_match_team(defender)
+
+    assert team.formation[Zone.DEFENSE] == [defender]
+    assert team.formation[Zone.MIDFIELD] == []
+    assert team.match_players == [defender]
+
+
+def test_match_player_must_belong_to_roster():
+    team = Team("Solar Smashers")
+    outsider = Player(50, 0, "Outsider", 3, position=Zone.DEFENSE)
+
+    team.add_player_to_match_team(outsider)
+
+    assert team.match_players == []
+    assert outsider not in team.players
+
+
+def test_match_player_cannot_be_added_twice():
+    team = Team("Solar Smashers")
+    defender = Player(50, 0, "Defender", 3, position=Zone.DEFENSE)
+    team.add_player_to_team(defender)
+
+    team.add_player_to_match_team(defender)
+    team.add_player_to_match_team(defender)
+
+    assert team.match_players == [defender]
+
+
+def test_match_lineup_is_limited_to_five_players():
+    team = Team("Solar Smashers")
+    players = [Player(50, 0, f"Player {i}", 3) for i in range(6)]
+    for member in players:
+        team.add_player_to_team(member)
+        team.add_player_to_match_team(member)
+
+    assert len(team.players) == 6
+    assert len(team.match_players) == 5
+    assert players[5] not in team.match_players
+
+
+def test_incomplete_lineup_is_allowed():
+    team = Team("Solar Smashers")
+    forward = Player(50, 0, "Forward", 3, position=Zone.ATTACK)
+    team.add_player_to_team(forward)
+
+    team.add_player_to_match_team(forward)
+
+    assert team.match_players == [forward]
+    assert team.formation[Zone.DEFENSE] == []
+    assert team.formation[Zone.MIDFIELD] == []
+
+
+def test_remove_player_from_match_team_keeps_roster_member():
+    team = Team("Solar Smashers")
+    defender = Player(50, 0, "Defender", 3, position=Zone.DEFENSE)
+    team.add_player_to_team(defender)
+    team.add_player_to_match_team(defender)
+
+    team.remove_player_from_match_team(defender)
+
+    assert team.match_players == []
+    assert defender in team.players
+
+
+def test_cannot_remove_fielded_player_from_roster():
+    team = Team("Solar Smashers")
+    defender = Player(50, 0, "Defender", 3, position=Zone.DEFENSE)
+    team.add_player_to_team(defender)
+    team.add_player_to_match_team(defender)
+
+    team.remove_player_from_team(defender)
+
+    assert defender in team.players
+    assert defender in team.match_players
+
+
+def test_remove_player_from_roster_after_unfielding():
+    team = Team("Solar Smashers")
+    defender = Player(50, 0, "Defender", 3, position=Zone.DEFENSE)
+    team.add_player_to_team(defender)
+    team.add_player_to_match_team(defender)
+
+    team.remove_player_from_match_team(defender)
+    team.remove_player_from_team(defender)
+
+    assert defender not in team.players
+    assert defender not in team.match_players
+
+
+def test_match_players_reflects_formation_changes():
+    team = Team("Solar Smashers")
+    defender = Player(50, 0, "Defender", 3, position=Zone.DEFENSE)
+    forward = Player(50, 0, "Forward", 3, position=Zone.ATTACK)
+    team.add_player_to_team(defender)
+    team.add_player_to_team(forward)
+
+    team.add_player_to_match_team(defender)
+    assert team.match_players == [defender]
+
+    team.add_player_to_match_team(forward)
+    assert set(team.match_players) == {defender, forward}
+
+    team.remove_player_from_match_team(defender)
+    assert team.match_players == [forward]
+
+def test_bench_player_is_not_active():
+    team = Team("Solar Smashers")
+    fielded = Player(50, 0, "Fielded", 3, position=Zone.DEFENSE)
+    bench = Player(50, 0, "Bench", 5, position=Zone.DEFENSE)
+    team.add_player_to_team(fielded)
+    team.add_player_to_team(bench)
+    team.add_player_to_match_team(fielded)
+
+    assert get_all_active_player(team) == [fielded]
+    assert bench not in team.match_players
+
+
+def test_bench_does_not_prevent_team_elimination():
+    team = Team("Solar Smashers")
+    fielded = Player(0, 0, "Fielded", 3, position=Zone.DEFENSE)
+    bench = Player(50, 0, "Bench", 5, position=Zone.DEFENSE)
+    team.add_player_to_team(fielded)
+    team.add_player_to_team(bench)
+    team.add_player_to_match_team(fielded)
+
+    assert is_team_eliminated(team) is True
+
+
 def test_get_all_active_player_all_alive():
     player_1 = Player(10, 0, "Player 1", 3)
     player_2 = Player(20, 0, "Player 2", 4)
-    team = Team("Test Team", [player_1, player_2])
+    team = make_team("Test Team", [player_1, player_2])
     result = get_all_active_player(team)
     assert result == [player_1, player_2]
 
@@ -349,7 +533,7 @@ def test_get_all_active_player_all_alive():
 def test_get_all_active_player_all_ko():
     player_1 = Player(0, 0, "Player 1", 3)
     player_2 = Player(0, 0 ,"Player 2", 4)
-    team = Team("Test Team", [player_1, player_2])
+    team = make_team("Test Team", [player_1, player_2])
     result = get_all_active_player(team)
     assert result == []
 
@@ -357,7 +541,7 @@ def test_get_all_active_player_all_ko():
 def test_get_all_active_player_partly_ko():
     player_1 = Player(3, 0, "Player 1", 3)
     player_2 = Player(0, 0 ,"Player 2", 4)
-    team = Team("Test Team", [player_1, player_2])
+    team = make_team("Test Team", [player_1, player_2])
     result = get_all_active_player(team)
     assert result == [player_1]
 
@@ -365,7 +549,7 @@ def test_get_all_active_player_partly_ko():
 def test_is_team_eliminated_all_ko():
     player_1 = Player(0, 0, "Player 1", 3)
     player_2 = Player(0, 0 ,"Player 2", 4)
-    team = Team("Test Team", [player_1, player_2])
+    team = make_team("Test Team", [player_1, player_2])
     result = is_team_eliminated(team)
     assert result == True
 
@@ -373,7 +557,7 @@ def test_is_team_eliminated_all_ko():
 def test_is_team_eliminated_all_alive():
     player_1 = Player(11, 0, "Player 1", 3)
     player_2 = Player(3, 0 ,"Player 2", 4)
-    team = Team("Test Team", [player_1, player_2])
+    team = make_team("Test Team", [player_1, player_2])
     result = is_team_eliminated(team)
     assert result == False
 
@@ -381,87 +565,88 @@ def test_is_team_eliminated_all_alive():
 def test_is_team_eliminated_mixed():
     player_1 = Player(11, 0, "Player 1", 3)
     player_2 = Player(0, 0, "Player 2", 4)
-    team = Team("Test Team", [player_1, player_2])
+    team = make_team("Test Team", [player_1, player_2])
     result = is_team_eliminated(team)
     assert result == False
 
 
 def test_select_random_player_in_zone_only_active():
-    player_1 = Player(0, 0, "Test Player 1", 2)
-    player_2 = Player(50, 0, "Test Player 2", 4)
-    player_3 = Player(50, 0, "Test Player 3", 4)
+    player_1 = Player(0, 0, "Test Player 1", 2, position=Zone.DEFENSE)
+    player_2 = Player(50, 0, "Test Player 2", 4, position=Zone.DEFENSE)
+    player_3 = Player(50, 0, "Test Player 3", 4, position=Zone.DEFENSE)
     player_4 = Player(50, 0, "Test Player 4", 3)
     player_5 = Player(50, 0, "Test Player 5", 5)
-    team = Team("Test Team",[player_1, player_2, player_3, player_4, player_5])
-    team.formation[Zone.DEFENSE].append(player_1)
-    team.formation[Zone.DEFENSE].append(player_2)
-    team.formation[Zone.DEFENSE].append(player_3)
+    team = make_team("Test Team",[player_1, player_2, player_3, player_4, player_5], auto_lineup=False)
+    team.add_player_to_match_team(player_1)
+    team.add_player_to_match_team(player_2)
+    team.add_player_to_match_team(player_3)
     result = select_random_player_in_zone(team, Zone.DEFENSE)
-    assert result in [team.match_players[1], team.match_players[2]]
+    assert result in [team.players[1], team.players[2]]
     assert result.hp > 0
 
 
 def test_select_random_player_in_zone_empty():
-    team = Team(
+    team = make_team(
         "Test Team",
         [
             Player(0, 0, "Test Player 1", 2),
-            Player(0, 0, "Test Player 2", 4),
-            Player(0, 0, "Test Player 3", 4),
-        ]
+            Player(0, 0, "Test Player 2", 4, position=Zone.ATTACK),
+            Player(0, 0, "Test Player 3", 4, position=Zone.ATTACK),
+        ],
+        auto_lineup=False,
     )
-    team.formation[Zone.ATTACK].append(team.match_players[1])
-    team.formation[Zone.ATTACK].append(team.match_players[2])
-    team.formation[Zone.MIDFIELD].append(team.match_players[0])
+    team.add_player_to_match_team(team.players[1])
+    team.add_player_to_match_team(team.players[2])
+    team.add_player_to_match_team(team.players[0])
     result = select_random_player_in_zone(team, Zone.DEFENSE)
     assert result is None
 
 
 def test_select_midfield_player_from_midfield():
-    player_1 = Player(1, 0, "Test Player 1", 2)
+    player_1 = Player(1, 0, "Test Player 1", 2, position=Zone.DEFENSE)
     player_2 = Player(3, 0, "Test Player 2", 4)
-    player_3 = Player(22, 0, "Test Player 3", 4)
+    player_3 = Player(22, 0, "Test Player 3", 4, position=Zone.ATTACK)
     player_4 = Player(3, 0, "Test Player 4", 4)
-    player_5 = Player(2, 0, "Test Player 5", 4)
-    team = Team("Test Team", [player_1, player_2, player_3, player_4, player_5])
-    team.formation[Zone.DEFENSE].append(player_1)
-    team.formation[Zone.MIDFIELD].append(player_2)
-    team.formation[Zone.ATTACK].append(player_3)
-    team.formation[Zone.MIDFIELD].append(player_4)
-    team.formation[Zone.ATTACK].append(player_5)
+    player_5 = Player(2, 0, "Test Player 5", 4, position=Zone.ATTACK)
+    team = make_team("Test Team", [player_1, player_2, player_3, player_4, player_5], auto_lineup=False)
+    team.add_player_to_match_team(player_1)
+    team.add_player_to_match_team(player_2)
+    team.add_player_to_match_team(player_3)
+    team.add_player_to_match_team(player_4)
+    team.add_player_to_match_team(player_5)
     result = select_midfield_player(team)
     assert result in (player_2, player_4)
 
 
 def test_select_midfield_player_fallback_defense():
     """Checks that a DEFENSE player was chosen"""
-    player_1 = Player(1, 0, "Test Player 1", 2)
+    player_1 = Player(1, 0, "Test Player 1", 2, position=Zone.DEFENSE)
     player_2 = Player(0, 0, "Test Player 2", 4)
-    player_3 = Player(22, 0, "Test Player 3", 4)
+    player_3 = Player(22, 0, "Test Player 3", 4, position=Zone.ATTACK)
     player_4 = Player(0, 0, "Test Player 4", 4)
-    player_5 = Player(2, 0, "Test Player 5", 4)
-    team = Team("Test Team", [player_1, player_2, player_3, player_4, player_5])
-    team.formation[Zone.DEFENSE].append(player_1)
-    team.formation[Zone.MIDFIELD].append(player_2)
-    team.formation[Zone.ATTACK].append(player_3)
-    team.formation[Zone.MIDFIELD].append(player_4)
-    team.formation[Zone.DEFENSE].append(player_5)
+    player_5 = Player(2, 0, "Test Player 5", 4, position=Zone.DEFENSE)
+    team = make_team("Test Team", [player_1, player_2, player_3, player_4, player_5], auto_lineup=False)
+    team.add_player_to_match_team(player_1)
+    team.add_player_to_match_team(player_2)
+    team.add_player_to_match_team(player_3)
+    team.add_player_to_match_team(player_4)
+    team.add_player_to_match_team(player_5)
     result = select_midfield_player(team)
     assert result in (player_1, player_5)
 
 
 def test_select_midfield_player_fallback_attack():
-    player_1 = Player(0, 0, "Test Player 1", 2)
+    player_1 = Player(0, 0, "Test Player 1", 2, position=Zone.DEFENSE)
     player_2 = Player(0, 0, "Test Player 2", 4)
-    player_3 = Player(22, 0, "Test Player 3", 4)
+    player_3 = Player(22, 0, "Test Player 3", 4, position=Zone.ATTACK)
     player_4 = Player(0, 0, "Test Player 4", 4)
-    player_5 = Player(0, 0, "Test Player 5", 4)
-    team = Team("Test Team", [player_1, player_2, player_3, player_4, player_5])
-    team.formation[Zone.DEFENSE].append(player_1)
-    team.formation[Zone.MIDFIELD].append(player_2)
-    team.formation[Zone.ATTACK].append(player_3)
-    team.formation[Zone.MIDFIELD].append(player_4)
-    team.formation[Zone.DEFENSE].append(player_5)
+    player_5 = Player(0, 0, "Test Player 5", 4, position=Zone.DEFENSE)
+    team = make_team("Test Team", [player_1, player_2, player_3, player_4, player_5], auto_lineup=False)
+    team.add_player_to_match_team(player_1)
+    team.add_player_to_match_team(player_2)
+    team.add_player_to_match_team(player_3)
+    team.add_player_to_match_team(player_4)
+    team.add_player_to_match_team(player_5)
     result = select_midfield_player(team)
     assert result is player_3
 
@@ -597,11 +782,11 @@ def test_midfield_team_a_wins(monkeypatch):
     player_a = Player(50, 0, "Player A", 4)
     player_b = Player(50, 0, "Player B", 2)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a], auto_lineup=False)
+    team_b = make_team("Team B", [player_b], auto_lineup=False)
 
-    team_a.formation[Zone.MIDFIELD].append(player_a)
-    team_b.formation[Zone.MIDFIELD].append(player_b)
+    team_a.add_player_to_match_team(player_a)
+    team_b.add_player_to_match_team(player_b)
 
     rolls = iter([8, 2])
     monkeypatch.setattr(
@@ -620,11 +805,11 @@ def test_midfield_team_b_wins(monkeypatch):
     player_a = Player(50, 0, "Player A", 2)
     player_b = Player(50, 0, "Player B", 4)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a], auto_lineup=False)
+    team_b = make_team("Team B", [player_b], auto_lineup=False)
 
-    team_a.formation[Zone.MIDFIELD].append(player_a)
-    team_b.formation[Zone.MIDFIELD].append(player_b)
+    team_a.add_player_to_match_team(player_a)
+    team_b.add_player_to_match_team(player_b)
 
     rolls = iter([2, 8])
     monkeypatch.setattr(
@@ -643,11 +828,11 @@ def test_midfield_winner_becomes_ball_carrier(monkeypatch):
     player_a = Player(50, 0, "Player A", 4)
     player_b = Player(50, 0, "Player B", 2)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a], auto_lineup=False)
+    team_b = make_team("Team B", [player_b], auto_lineup=False)
 
-    team_a.formation[Zone.MIDFIELD].append(player_a)
-    team_b.formation[Zone.MIDFIELD].append(player_b)
+    team_a.add_player_to_match_team(player_a)
+    team_b.add_player_to_match_team(player_b)
 
     rolls = iter([8, 2])
     monkeypatch.setattr(
@@ -666,11 +851,11 @@ def test_midfield_loser_becomes_defeated_player(monkeypatch):
     player_a = Player(50, 0, "Player A", 4)
     player_b = Player(50, 0, "Player B", 2)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a], auto_lineup=False)
+    team_b = make_team("Team B", [player_b], auto_lineup=False)
 
-    team_a.formation[Zone.MIDFIELD].append(player_a)
-    team_b.formation[Zone.MIDFIELD].append(player_b)
+    team_a.add_player_to_match_team(player_a)
+    team_b.add_player_to_match_team(player_b)
 
     rolls = iter([8, 2])
     monkeypatch.setattr(
@@ -689,11 +874,11 @@ def test_midfield_only_team_a_has_player():
     player_a = Player(50, 0, "Player A", 4)
     player_b = Player(0, 0, "Player B", 4)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a], auto_lineup=False)
+    team_b = make_team("Team B", [player_b], auto_lineup=False)
 
-    team_a.formation[Zone.MIDFIELD].append(player_a)
-    team_b.formation[Zone.MIDFIELD].append(player_b)
+    team_a.add_player_to_match_team(player_a)
+    team_b.add_player_to_match_team(player_b)
 
     result = process_midfield(team_a, team_b)
 
@@ -708,11 +893,11 @@ def test_midfield_only_team_b_has_player():
     player_a = Player(0, 0, "Player A", 4)
     player_b = Player(50, 0, "Player B", 4)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a], auto_lineup=False)
+    team_b = make_team("Team B", [player_b], auto_lineup=False)
 
-    team_a.formation[Zone.MIDFIELD].append(player_a)
-    team_b.formation[Zone.MIDFIELD].append(player_b)
+    team_a.add_player_to_match_team(player_a)
+    team_b.add_player_to_match_team(player_b)
 
     result = process_midfield(team_a, team_b)
 
@@ -727,11 +912,11 @@ def test_midfield_no_active_players():
     player_a = Player(0, 0, "Player A", 4)
     player_b = Player(0, 0, "Player B", 4)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a], auto_lineup=False)
+    team_b = make_team("Team B", [player_b], auto_lineup=False)
 
-    team_a.formation[Zone.MIDFIELD].append(player_a)
-    team_b.formation[Zone.MIDFIELD].append(player_b)
+    team_a.add_player_to_match_team(player_a)
+    team_b.add_player_to_match_team(player_b)
 
     result = process_midfield(team_a, team_b)
 
@@ -779,15 +964,15 @@ def test_player_decides_charge(monkeypatch):
 def test_pass_selects_attack_player(monkeypatch):
     """Checks that a pass selects an active player from the attack zone."""
     ball_carrier = Player(50, 0, "Ball Carrier", 3)
-    attack_player = Player(50, 0, "Attack Player", 4)
+    attack_player = Player(50, 0, "Attack Player", 4, position=Zone.ATTACK)
     defeated_player = Player(50, 0, "Defeated Player", 3)
 
-    team_a = Team("Team A", [ball_carrier, attack_player])
-    team_b = Team("Team B", [defeated_player])
+    team_a = make_team("Team A", [ball_carrier, attack_player], auto_lineup=False)
+    team_b = make_team("Team B", [defeated_player], auto_lineup=False)
 
-    team_a.formation[Zone.MIDFIELD].append(ball_carrier)
-    team_a.formation[Zone.ATTACK].append(attack_player)
-    team_b.formation[Zone.MIDFIELD].append(defeated_player)
+    team_a.add_player_to_match_team(ball_carrier)
+    team_a.add_player_to_match_team(attack_player)
+    team_b.add_player_to_match_team(defeated_player)
 
     match = Match(team_a, team_b)
 
@@ -826,11 +1011,11 @@ def test_pass_falls_back_to_charge(monkeypatch):
     ball_carrier = Player(50, 0, "Ball Carrier", 3)
     defeated_player = Player(50, 0, "Defeated Player", 3)
 
-    team_a = Team("Team A", [ball_carrier])
-    team_b = Team("Team B", [defeated_player])
+    team_a = make_team("Team A", [ball_carrier], auto_lineup=False)
+    team_b = make_team("Team B", [defeated_player], auto_lineup=False)
 
-    team_a.formation[Zone.MIDFIELD].append(ball_carrier)
-    team_b.formation[Zone.MIDFIELD].append(defeated_player)
+    team_a.add_player_to_match_team(ball_carrier)
+    team_b.add_player_to_match_team(defeated_player)
 
     match = Match(team_a, team_b)
 
@@ -873,8 +1058,8 @@ def test_empty_defense_reaches_goal_attempt(monkeypatch):
     """Checks that an empty defense allows the attacker to reach the goal attempt."""
     attacker = Player(50, 0, "Attacker", 4)
 
-    attacking_team = Team("Attacking Team", [attacker])
-    defending_team = Team("Defending Team", [])
+    attacking_team = make_team("Attacking Team", [attacker])
+    defending_team = make_team("Defending Team", [])
     match = Match(attacking_team, defending_team)
 
     monkeypatch.setattr(
@@ -910,8 +1095,8 @@ def test_defender_win_stops_attack(monkeypatch):
     attacker = Player(50, 0, "Attacker", 3)
     defender = Player(50, 0, "Defender", 4)
 
-    attacking_team = Team("Attacking Team", [attacker])
-    defending_team = Team("Defending Team", [defender])
+    attacking_team = make_team("Attacking Team", [attacker])
+    defending_team = make_team("Defending Team", [defender])
     match = Match(attacking_team, defending_team)
 
     duel_result = DuelResult(
@@ -952,8 +1137,8 @@ def test_attacker_win_reaches_goal_attempt(monkeypatch):
     attacker = Player(50, 0, "Attacker", 4)
     defender = Player(50, 0, "Defender", 3)
 
-    attacking_team = Team("Attacking Team", [attacker])
-    defending_team = Team("Defending Team", [defender])
+    attacking_team = make_team("Attacking Team", [attacker])
+    defending_team = make_team("Defending Team", [defender])
     match = Match(attacking_team, defending_team)
 
     duel_result = DuelResult(
@@ -1000,8 +1185,8 @@ def test_attack_result_stopped(monkeypatch):
     attacker = Player(50, 0, "Attacker", 3)
     defender = Player(50, 0, "Defender", 4)
 
-    attacking_team = Team("Attacking Team", [attacker])
-    defending_team = Team("Defending Team", [defender])
+    attacking_team = make_team("Attacking Team", [attacker])
+    defending_team = make_team("Defending Team", [defender])
     match = Match(attacking_team, defending_team)
 
     duel_result = DuelResult(
@@ -1042,8 +1227,8 @@ def test_attack_result_defender(monkeypatch):
     attacker = Player(50, 0, "Attacker", 3)
     defender = Player(50, 0, "Defender", 4)
 
-    attacking_team = Team("Attacking Team", [attacker])
-    defending_team = Team("Defending Team", [defender])
+    attacking_team = make_team("Attacking Team", [attacker])
+    defending_team = make_team("Defending Team", [defender])
     match = Match(attacking_team, defending_team)
 
     duel_result = DuelResult(
@@ -1084,8 +1269,8 @@ def test_attack_last_field_attack_when_stopped(monkeypatch):
     attacker = Player(50, 0, "Attacker", 3)
     defender = Player(50, 0, "Defender", 4)
 
-    attacking_team = Team("Attacking Team", [attacker])
-    defending_team = Team("Defending Team", [defender])
+    attacking_team = make_team("Attacking Team", [attacker])
+    defending_team = make_team("Defending Team", [defender])
     match = Match(attacking_team, defending_team)
 
     duel_result = DuelResult(
@@ -1125,8 +1310,8 @@ def test_attack_last_field_goal_on_attempt(monkeypatch):
     """Checks that the last field becomes GOAL when a goal attempt is reached."""
     attacker = Player(50, 0, "Attacker", 4)
 
-    attacking_team = Team("Attacking Team", [attacker])
-    defending_team = Team("Defending Team", [])
+    attacking_team = make_team("Attacking Team", [attacker])
+    defending_team = make_team("Defending Team", [])
     match = Match(attacking_team, defending_team)
 
     monkeypatch.setattr(
@@ -1161,8 +1346,8 @@ def test_goal_increases_score(monkeypatch):
     """Checks that a successful goal increases the team score by one."""
     attacker = Player(50, 0, "Attacker", 4)
 
-    attacking_team = Team("Attacking Team", [attacker])
-    defending_team = Team("Defending Team", [])
+    attacking_team = make_team("Attacking Team", [attacker])
+    defending_team = make_team("Defending Team", [])
     match = Match(attacking_team, defending_team)
 
     monkeypatch.setattr(
@@ -1197,8 +1382,8 @@ def test_goal_awards_xp(monkeypatch):
     """Checks that the scoring player receives GOAL XP."""
     attacker = Player(50, 0, "Attacker", 4)
 
-    attacking_team = Team("Attacking Team", [attacker])
-    defending_team = Team("Defending Team", [])
+    attacking_team = make_team("Attacking Team", [attacker])
+    defending_team = make_team("Defending Team", [])
     match = Match(attacking_team, defending_team)
 
     monkeypatch.setattr(
@@ -1233,8 +1418,8 @@ def test_missed_goal_does_not_change_score(monkeypatch):
     """Checks that a missed goal does not change the team score."""
     attacker = Player(50, 0, "Attacker", 4)
 
-    attacking_team = Team("Attacking Team", [attacker])
-    defending_team = Team("Defending Team", [])
+    attacking_team = make_team("Attacking Team", [attacker])
+    defending_team = make_team("Defending Team", [])
     match = Match(attacking_team, defending_team)
 
     monkeypatch.setattr(
@@ -1269,8 +1454,8 @@ def test_attack_result_points_scored(monkeypatch):
     """Checks that AttackResult stores one point after a successful goal."""
     attacker = Player(50, 0, "Attacker", 4)
 
-    attacking_team = Team("Attacking Team", [attacker])
-    defending_team = Team("Defending Team", [])
+    attacking_team = make_team("Attacking Team", [attacker])
+    defending_team = make_team("Defending Team", [])
     match = Match(attacking_team, defending_team)
 
     monkeypatch.setattr(
@@ -1306,8 +1491,8 @@ def test_attack_stopped_event(monkeypatch):
     attacker = Player(50, 0, "Attacker", 3)
     defender = Player(50, 0, "Defender", 4)
 
-    attacking_team = Team("Team A", [attacker])
-    defending_team = Team("Team B", [defender])
+    attacking_team = make_team("Team A", [attacker])
+    defending_team = make_team("Team B", [defender])
     match = Match(attacking_team, defending_team)
 
     duel_result = DuelResult(
@@ -1403,8 +1588,8 @@ def test_goal_attempt_above_threshold(monkeypatch):
 
 def test_add_event_adds_event():
     """Checks that add_event adds an event to the match."""
-    team_a = Team("Team A", [])
-    team_b = Team("Team B", [])
+    team_a = make_team("Team A", [])
+    team_b = make_team("Team B", [])
     match = Match(team_a, team_b)
 
     match.add_event(
@@ -1417,8 +1602,8 @@ def test_add_event_adds_event():
 
 def test_add_event_stores_correct_key():
     """Checks that add_event stores the correct event key."""
-    team_a = Team("Team A", [])
-    team_b = Team("Team B", [])
+    team_a = make_team("Team A", [])
+    team_b = make_team("Team B", [])
     match = Match(team_a, team_b)
 
     match.add_event(
@@ -1431,8 +1616,8 @@ def test_add_event_stores_correct_key():
 
 def test_add_event_stores_correct_data():
     """Checks that add_event stores the supplied event data."""
-    team_a = Team("Team A", [])
-    team_b = Team("Team B", [])
+    team_a = make_team("Team A", [])
+    team_b = make_team("Team B", [])
     match = Match(team_a, team_b)
 
     match.add_event(
@@ -1448,15 +1633,15 @@ def test_add_event_stores_correct_data():
 def test_pass_event(monkeypatch):
     """Checks that a successful pass creates a PASS event."""
     ball_carrier = Player(50, 0, "Ball Carrier", 3)
-    receiver = Player(50, 0, "Receiver", 4)
+    receiver = Player(50, 0, "Receiver", 4, position=Zone.ATTACK)
     defeated_player = Player(50, 0, "Defeated Player", 3)
 
-    team_a = Team("Team A", [ball_carrier, receiver])
-    team_b = Team("Team B", [defeated_player])
+    team_a = make_team("Team A", [ball_carrier, receiver], auto_lineup=False)
+    team_b = make_team("Team B", [defeated_player], auto_lineup=False)
 
-    team_a.formation[Zone.MIDFIELD].append(ball_carrier)
-    team_a.formation[Zone.ATTACK].append(receiver)
-    team_b.formation[Zone.MIDFIELD].append(defeated_player)
+    team_a.add_player_to_match_team(ball_carrier)
+    team_a.add_player_to_match_team(receiver)
+    team_b.add_player_to_match_team(defeated_player)
 
     match = Match(team_a, team_b)
 
@@ -1507,8 +1692,8 @@ def test_goal_event(monkeypatch):
     """Checks that a successful goal creates a GOAL event."""
     attacker = Player(50, 0, "Attacker", 4)
 
-    attacking_team = Team("Team A", [attacker])
-    defending_team = Team("Team B", [])
+    attacking_team = make_team("Team A", [attacker])
+    defending_team = make_team("Team B", [])
     match = Match(attacking_team, defending_team)
 
     monkeypatch.setattr(
@@ -1546,8 +1731,8 @@ def test_goal_missed_event(monkeypatch):
     """Checks that a missed goal creates a GOAL_MISSED event."""
     attacker = Player(50, 0, "Attacker", 4)
 
-    attacking_team = Team("Team A", [attacker])
-    defending_team = Team("Team B", [])
+    attacking_team = make_team("Team A", [attacker])
+    defending_team = make_team("Team B", [])
     match = Match(attacking_team, defending_team)
 
     monkeypatch.setattr(
@@ -1583,8 +1768,8 @@ def test_goal_missed_event(monkeypatch):
 
 def test_event_order_is_preserved():
     """Checks that events remain stored in the order they were added."""
-    team_a = Team("Team A", [])
-    team_b = Team("Team B", [])
+    team_a = make_team("Team A", [])
+    team_b = make_team("Team B", [])
     match = Match(team_a, team_b)
 
     match.add_event(
@@ -1616,8 +1801,8 @@ def test_match_ends_normally(monkeypatch):
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(50, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     match = Match(team_a, team_b)
 
@@ -1646,8 +1831,8 @@ def test_match_draw(monkeypatch):
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(50, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     match = Match(team_a, team_b)
 
@@ -1679,8 +1864,8 @@ def test_match_team_a_wins_by_score(monkeypatch):
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(50, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     team_a.score = 2
     team_b.score = 1
@@ -1710,8 +1895,8 @@ def test_match_team_b_wins_by_score(monkeypatch):
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(50, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     team_a.score = 1
     team_b.score = 2
@@ -1741,8 +1926,8 @@ def test_match_ends_on_elimination(monkeypatch):
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(0, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     match = Match(team_a, team_b)
 
@@ -1779,8 +1964,8 @@ def test_elimination_in_minute_60(monkeypatch):
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(50, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     match = Match(team_a, team_b)
 
@@ -1822,8 +2007,8 @@ def test_elimination_score_is_adjusted(monkeypatch):
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(0, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     team_a.score = 1
     team_b.score = 2
@@ -1847,8 +2032,8 @@ def test_existing_larger_lead_is_preserved(monkeypatch):
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(0, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     team_a.score = 6
     team_b.score = 1
@@ -1873,8 +2058,8 @@ def test_match_winner_gets_match_win_xp(monkeypatch):
     player_a_2 = Player(0, 0, "Player A2", 3)
     player_b = Player(50, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a_1, player_a_2])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a_1, player_a_2])
+    team_b = make_team("Team B", [player_b])
 
     team_a.score = 1
     team_b.score = 0
@@ -1899,13 +2084,33 @@ def test_match_winner_gets_match_win_xp(monkeypatch):
     assert player_a_2.xp == rules.Xp.MATCH_WIN
 
 
+def test_bench_player_gets_no_match_win_xp(monkeypatch):
+    """Only fielded players receive XP from a won match."""
+    fielded = Player(50, 0, "Fielded", 3)
+    bench = Player(50, 0, "Bench", 3)
+    opponent = Player(50, 0, "Opponent", 3)
+    team_a = make_team("Team A", [fielded, bench], auto_lineup=False)
+    team_b = make_team("Team B", [opponent])
+    team_a.add_player_to_match_team(fielded)
+    team_a.score = 1
+
+    match = Match(team_a, team_b)
+    monkeypatch.setattr(match_processor.dice, "roll_1d10", lambda: 0)
+    monkeypatch.setattr(match_processor, "sleep", lambda seconds: None)
+
+    match_processor.process_match(match)
+
+    assert fielded.xp == rules.Xp.MATCH_WIN
+    assert bench.xp == 0
+
+
 def test_loser_gets_no_match_win_xp(monkeypatch):
     """Checks that losing team players receive no MATCH_WIN XP."""
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(50, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     team_a.score = 1
     team_b.score = 0
@@ -1934,8 +2139,8 @@ def test_team_eliminated_event(monkeypatch):
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(0, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     match = Match(team_a, team_b)
 
@@ -1958,8 +2163,8 @@ def test_halftime_event(monkeypatch):
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(50, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     match = Match(team_a, team_b)
 
@@ -1988,8 +2193,8 @@ def test_fulltime_event(monkeypatch):
     player_a = Player(50, 0, "Player A", 3)
     player_b = Player(50, 0, "Player B", 3)
 
-    team_a = Team("Team A", [player_a])
-    team_b = Team("Team B", [player_b])
+    team_a = make_team("Team A", [player_a])
+    team_b = make_team("Team B", [player_b])
 
     match = Match(team_a, team_b)
 

@@ -45,6 +45,9 @@ team_a.add_player_to_match_team(player_tearmaker)
 team_a.add_player_to_match_team(player_seth)
 print(team_a.get_player_stats(match_players=True))
 
+team_a.remove_player_from_match_team(player_dominator)
+team_a.remove_player_from_team(player_dominator)
+print(team_a.get_player_stats(match_players=True))
 exit()
 
 team_a.match_players[0].install_implant(implants.HELMET_1)

@@ -103,7 +103,7 @@ def process_match(match) -> None:
         loser_team = None
 
     if winner_team:
-        for player in winner_team.players:
+        for player in winner_team.match_players:
             player.xp += rules.Xp.MATCH_WIN
         print(messages[MessageKey.WINNER].format(team=winner_team.name))
         match.add_event(
